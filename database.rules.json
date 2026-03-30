@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "status": {
+      "$gameId": {
+        "$playerId": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid === $playerId"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /rooms/{code} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /games/{gameId} {
+      allow read: if request.auth != null;
+      allow update: if request.auth.uid == resource.data.hostId;
+      allow create, delete: if false;
+    }
+
+    match /games/{gameId}/players/{playerId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == playerId;
+    }
+
+    match /games/{gameId}/rounds/{roundNum} {
+      allow read: if request.auth.uid in get(/databases/$(database)/documents/games/$(gameId)).data.playerIds;
+      allow write: if false;
+    }
+
+    match /games/{gameId}/rounds/{roundNum}/answers/{playerId} {
+      allow create: if request.auth.uid == playerId
+        && get(/databases/$(database)/documents/games/$(gameId)/rounds/$(roundNum)).data.status == "answering"
+        && !exists(/databases/$(database)/documents/games/$(gameId)/rounds/$(roundNum)/answers/$(playerId));
+      allow read: if request.auth.uid == playerId
+        || get(/databases/$(database)/documents/games/$(gameId)/rounds/$(roundNum)).data.status != "answering";
+      allow update, delete: if false;
+    }
+
+    match /games/{gameId}/questionPool/{questionId} {
+      allow read: if false;
+      allow write: if false;
+    }
+  }
+}

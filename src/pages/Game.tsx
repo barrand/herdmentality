@@ -1,0 +1,114 @@
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '../lib/firebase'
+import { useAuth, useCurrentPlayer, useIsHost } from '../hooks/usePlayer'
+import { useGame, useRound } from '../hooks/useGame'
+import { setupPresence } from '../lib/presence'
+import Lobby from '../components/Lobby'
+import GameHeader from '../components/GameHeader'
+import QuestionDisplay from '../components/QuestionDisplay'
+import RevealBoard from '../components/RevealBoard'
+import Scoreboard from '../components/Scoreboard'
+
+export default function Game() {
+  const { code } = useParams<{ code: string }>()
+  const { uid, loading: authLoading } = useAuth()
+  const [gameId, setGameId] = useState<string | null>(null)
+  const [lookupError, setLookupError] = useState('')
+
+  const { game, players, loading: gameLoading } = useGame(gameId)
+  const round = useRound(gameId, game?.currentRound ?? null)
+  const currentPlayer = useCurrentPlayer(players, uid)
+  const isHost = useIsHost(game?.hostId, uid)
+
+  useEffect(() => {
+    if (!code) return
+    const upperCode = code.toUpperCase()
+
+    async function lookupGame() {
+      const roomRef = doc(db, 'rooms', upperCode)
+      const roomSnap = await getDoc(roomRef)
+      if (roomSnap.exists() && roomSnap.data().active) {
+        setGameId(roomSnap.data().gameId)
+      } else {
+        setLookupError('Room not found')
+      }
+    }
+    lookupGame()
+  }, [code])
+
+  useEffect(() => {
+    if (gameId && uid) {
+      setupPresence(gameId)
+    }
+  }, [gameId, uid])
+
+  if (authLoading || gameLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-green-50">
+        <p className="text-lg text-green-800">Loading...</p>
+      </div>
+    )
+  }
+
+  if (lookupError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-green-50">
+        <p className="text-lg text-red-600">{lookupError}</p>
+      </div>
+    )
+  }
+
+  if (!game || !gameId) return null
+
+  if (game.status === 'lobby') {
+    return (
+      <Lobby
+        game={game}
+        players={players}
+        isHost={isHost}
+        currentPlayer={currentPlayer}
+      />
+    )
+  }
+
+  if (game.status === 'finished') {
+    return (
+      <Scoreboard
+        game={game}
+        players={players}
+        isHost={isHost}
+        isFinal
+      />
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-green-50">
+      <GameHeader
+        game={game}
+        currentPlayer={currentPlayer}
+        round={round}
+      />
+
+      {round?.status === 'answering' && (
+        <QuestionDisplay
+          game={game}
+          round={round}
+          isHost={isHost}
+          players={players}
+        />
+      )}
+
+      {(round?.status === 'revealing' || round?.status === 'scored') && (
+        <RevealBoard
+          game={game}
+          round={round}
+          players={players}
+          isHost={isHost}
+        />
+      )}
+    </div>
+  )
+}
