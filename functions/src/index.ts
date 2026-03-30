@@ -60,7 +60,7 @@ export const createGame = onCall(async (request) => {
     hostId: uid,
     status: 'lobby',
     currentRound: 0,
-    pinkCowHolder: null,
+    rottenEggHolder: null,
     categories: [],
     playerIds: [uid],
     settings: { totalRounds: 15, secondsPerRound: 45, autoAdvanceSeconds: 10 },
@@ -68,7 +68,7 @@ export const createGame = onCall(async (request) => {
 
   await gameRef.collection('players').doc(uid).set({
     name: playerName.trim(),
-    cows: 0,
+    eggs: 0,
     connected: true,
   })
 
@@ -105,7 +105,7 @@ export const joinGame = onCall(async (request) => {
 
   await gameRef.collection('players').doc(uid).set({
     name: playerName.trim(),
-    cows: 0,
+    eggs: 0,
     connected: true,
   })
 
@@ -155,7 +155,7 @@ export const startGame = onCall(async (request) => {
     deadline: Timestamp.fromDate(deadline),
     answerCount: 0,
     answerGroups: [],
-    herdAnswer: [],
+    flockAnswer: [],
     results: {},
   })
 
@@ -327,31 +327,31 @@ async function triggerScoring(gameId: string, roundNum: number) {
     }
   }
 
-  const { results, pinkCowHolder } = scoreRoundAnswers(
+  const { results, rottenEggHolder } = scoreRoundAnswers(
     answers,
     groups,
-    game.pinkCowHolder,
+    game.rottenEggHolder,
     game.playerIds,
   )
 
-  const hasHerd = Object.values(results).some((r) => r === 'herd')
+  const hasFlock = Object.values(results).some((r) => r === 'flock')
 
   await roundRef.update({
     status: 'scored',
     answerGroups: groups.map((g) => JSON.stringify(g)),
-    herdAnswer: hasHerd ? (groups[0] ?? []) : [],
+    flockAnswer: hasFlock ? (groups[0] ?? []) : [],
     results,
     playerAnswers: answers,
     commentary,
   })
 
   const batch = db.batch()
-  const gameUpdates: Record<string, any> = { pinkCowHolder: pinkCowHolder }
+  const gameUpdates: Record<string, any> = { rottenEggHolder: rottenEggHolder }
 
   for (const [playerId, result] of Object.entries(results)) {
-    if (result === 'herd') {
+    if (result === 'flock') {
       const playerRef = db.collection('games').doc(gameId).collection('players').doc(playerId)
-      batch.update(playerRef, { cows: FieldValue.increment(1) })
+      batch.update(playerRef, { eggs: FieldValue.increment(1) })
     }
   }
 
@@ -366,7 +366,7 @@ async function doAdvanceRound(gameId: string) {
 
   const playersSnap = await gameRef.collection('players').get()
   const winner = playersSnap.docs.find(
-    (d) => d.data().cows >= 8 && d.id !== game.pinkCowHolder
+    (d) => d.data().eggs >= 8 && d.id !== game.rottenEggHolder
   )
   if (winner) {
     await gameRef.update({ status: 'finished' })
@@ -394,7 +394,7 @@ async function doAdvanceRound(gameId: string) {
     deadline: Timestamp.fromDate(deadline),
     answerCount: 0,
     answerGroups: [],
-    herdAnswer: [],
+    flockAnswer: [],
     results: {},
   })
 

@@ -1,14 +1,14 @@
-type RoundResult = 'herd' | 'outlier' | 'pink' | 'no-answer'
+type RoundResult = 'flock' | 'outlier' | 'rotten' | 'no-answer'
 
 interface ScoringResult {
   results: Record<string, RoundResult>
-  pinkCowHolder: string | null
+  rottenEggHolder: string | null
 }
 
 export function scoreRoundAnswers(
   answers: Record<string, string>,
   groups: string[][],
-  currentPinkCowHolder: string | null,
+  currentRottenEggHolder: string | null,
   allPlayerIds: string[],
 ): ScoringResult {
   const results: Record<string, RoundResult> = {}
@@ -22,7 +22,7 @@ export function scoreRoundAnswers(
   const sortedGroups = [...groups].sort((a, b) => b.length - a.length)
 
   if (sortedGroups.length === 0) {
-    return { results, pinkCowHolder: currentPinkCowHolder }
+    return { results, rottenEggHolder: currentRottenEggHolder }
   }
 
   const answerToPlayer = new Map<string, string>()
@@ -39,33 +39,33 @@ export function scoreRoundAnswers(
         results[playerId] = 'outlier'
       }
     }
-    return { results, pinkCowHolder: currentPinkCowHolder }
+    return { results, rottenEggHolder: currentRottenEggHolder }
   }
 
-  const herdGroup = sortedGroups[0]
-  const herdSet = new Set(herdGroup)
+  const flockGroup = sortedGroups[0]
+  const flockSet = new Set(flockGroup)
 
   for (const [playerId, answer] of Object.entries(answers)) {
     if (playerId in results) continue
 
-    if (herdSet.has(answer)) {
-      results[playerId] = 'herd'
+    if (flockSet.has(answer)) {
+      results[playerId] = 'flock'
     } else {
       results[playerId] = 'outlier'
     }
   }
 
-  let newPinkCowHolder = currentPinkCowHolder
+  let newRottenEggHolder = currentRottenEggHolder
   const soloGroups = sortedGroups.filter((g) => g.length === 1)
 
   if (soloGroups.length === 1) {
     const soloAnswer = soloGroups[0][0]
     const soloPlayerId = answerToPlayer.get(soloAnswer)
     if (soloPlayerId) {
-      results[soloPlayerId] = 'pink'
-      newPinkCowHolder = soloPlayerId
+      results[soloPlayerId] = 'rotten'
+      newRottenEggHolder = soloPlayerId
     }
   }
 
-  return { results, pinkCowHolder: newPinkCowHolder }
+  return { results, rottenEggHolder: newRottenEggHolder }
 }

@@ -20,10 +20,10 @@ export default function GameHeader({ game, currentPlayer, round }: Props) {
         </div>
         <div className="flex justify-between items-center mt-1">
           <div className="flex items-center gap-2">
-            <span>🐄 x {currentPlayer?.cows ?? 0}</span>
-            {game.pinkCowHolder === currentPlayer?.id && (
-              <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                PINK COW
+            <span>🥚 x {currentPlayer?.eggs ?? 0}</span>
+            {game.rottenEggHolder === currentPlayer?.id && (
+              <span className="bg-lime-700 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                ROTTEN EGG
               </span>
             )}
           </div>
@@ -31,7 +31,7 @@ export default function GameHeader({ game, currentPlayer, round }: Props) {
             onClick={() => setShowLeaderboard(true)}
             className="text-sm underline opacity-80 hover:opacity-100"
           >
-            Leaderboard
+            Pecking Order
           </button>
         </div>
       </div>

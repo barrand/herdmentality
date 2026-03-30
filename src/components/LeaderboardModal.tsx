@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function LeaderboardModal({ game, players, currentPlayerId, onClose }: Props) {
-  const sorted = [...players].sort((a, b) => b.cows - a.cows)
+  const sorted = [...players].sort((a, b) => b.eggs - a.eggs)
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
@@ -18,7 +18,7 @@ export default function LeaderboardModal({ game, players, currentPlayerId, onClo
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-green-900">THE RANCH LEDGER</h2>
+          <h2 className="text-xl font-bold text-green-900">THE PECKING ORDER</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
         </div>
         <ul className="space-y-3">
@@ -34,8 +34,8 @@ export default function LeaderboardModal({ game, players, currentPlayerId, onClo
                 {player.id === currentPlayerId && ' ←'}
               </span>
               <div className="flex items-center gap-2">
-                <span>{'🐄'.repeat(player.cows)}</span>
-                {game.pinkCowHolder === player.id && <span className="text-pink-500">🩷🐄</span>}
+                <span>{'🥚'.repeat(player.eggs)}</span>
+                {game.rottenEggHolder === player.id && <span className="text-lime-700">🤢🥚</span>}
               </div>
             </li>
           ))}

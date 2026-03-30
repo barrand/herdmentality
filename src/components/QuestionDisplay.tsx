@@ -110,14 +110,14 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
               disabled={!answer.trim() || submitting}
               className="w-full py-4 text-lg font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 active:bg-green-800 disabled:opacity-50 transition-colors"
             >
-              {submitting ? 'Locking in...' : 'LOCK IN'}
+              {submitting ? 'Clucking in...' : 'CLUCK IN'}
             </button>
           </>
         ) : (
           <div className="text-center py-4">
             <p className="text-green-700 font-medium">You answered:</p>
             <p className="text-2xl font-bold text-green-900 mt-1">"{answer}"</p>
-            <p className="text-green-500 mt-2">Locked in</p>
+            <p className="text-green-500 mt-2">Clucked in</p>
           </div>
         )}
       </div>
@@ -131,7 +131,7 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
             onClick={handleSkip}
             className="mt-3 text-sm text-green-400 underline hover:text-green-600"
           >
-            Skip question
+            Skip to next nest
           </button>
         )}
       </div>

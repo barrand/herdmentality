@@ -15,9 +15,9 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="animate-pulse text-center space-y-3">
-          <p className="text-4xl">🐄</p>
+          <p className="text-4xl">🐔</p>
           <p className="text-xl font-bold text-green-900">Checking all answers...</p>
-          <p className="text-green-500 text-sm">The herd is being counted</p>
+          <p className="text-green-500 text-sm">The flock is being counted</p>
         </div>
       </div>
     )
@@ -25,10 +25,10 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
 
   const playerAnswers = round.playerAnswers ?? {}
   const results = round.results ?? {}
-  const hasHerd = Object.values(results).some((r) => r === 'herd')
+  const hasFlock = Object.values(results).some((r) => r === 'flock')
 
   const sortedPlayers = Object.entries(results).sort(([, a], [, b]) => {
-    const order: Record<string, number> = { herd: 0, outlier: 1, pink: 2, 'no-answer': 3 }
+    const order: Record<string, number> = { flock: 0, outlier: 1, rotten: 2, 'no-answer': 3 }
     return (order[a] ?? 4) - (order[b] ?? 4)
   })
 
@@ -44,12 +44,12 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
 
   const resultBadge = (result: string) => {
     switch (result) {
-      case 'herd':
-        return <span className="text-xs font-bold bg-green-200 text-green-800 px-2 py-0.5 rounded-full">HERD</span>
-      case 'pink':
-        return <span className="text-xs font-bold bg-pink-200 text-pink-800 px-2 py-0.5 rounded-full">PINK COW</span>
+      case 'flock':
+        return <span className="text-xs font-bold bg-green-200 text-green-800 px-2 py-0.5 rounded-full">FLOCK</span>
+      case 'rotten':
+        return <span className="text-xs font-bold bg-lime-200 text-lime-800 px-2 py-0.5 rounded-full">ROTTEN EGG</span>
       case 'outlier':
-        return <span className="text-xs font-bold bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">STRAY</span>
+        return <span className="text-xs font-bold bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">FLOWN THE COOP</span>
       case 'no-answer':
         return <span className="text-xs font-bold bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">NO ANSWER</span>
       default:
@@ -63,15 +63,15 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
         <p className="text-lg font-bold text-green-900">{round.question}</p>
       </div>
 
-      {hasHerd ? (
+      {hasFlock ? (
         <div className="bg-green-100 border-2 border-green-300 rounded-2xl p-4 text-center">
-          <p className="text-sm font-bold text-green-700 uppercase tracking-wide">The Herd Said</p>
-          <p className="text-2xl font-bold text-green-900 mt-1">"{round.herdAnswer?.[0]}"</p>
+          <p className="text-sm font-bold text-green-700 uppercase tracking-wide">The Flock Said</p>
+          <p className="text-2xl font-bold text-green-900 mt-1">"{round.flockAnswer?.[0]}"</p>
         </div>
       ) : (
         <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-4 text-center">
-          <p className="text-lg font-bold text-yellow-800">No Herd!</p>
-          <p className="text-yellow-700 text-sm">No cows awarded this round.</p>
+          <p className="text-lg font-bold text-yellow-800">No Flock!</p>
+          <p className="text-yellow-700 text-sm">No eggs awarded this round.</p>
         </div>
       )}
 
@@ -86,10 +86,10 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
           <div
             key={playerId}
             className={`rounded-xl p-3 border flex items-center justify-between ${
-              result === 'herd'
+              result === 'flock'
                 ? 'bg-green-50 border-green-300'
-                : result === 'pink'
-                ? 'bg-pink-50 border-pink-300'
+                : result === 'rotten'
+                ? 'bg-lime-50 border-lime-300'
                 : 'bg-white border-green-200'
             }`}
           >
@@ -101,7 +101,7 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
             </div>
             <div className="flex items-center gap-2">
               {resultBadge(result)}
-              {result === 'herd' && <span className="text-sm font-bold text-green-700">+1</span>}
+              {result === 'flock' && <span className="text-sm font-bold text-green-700">+1</span>}
             </div>
           </div>
         ))}
@@ -113,7 +113,7 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
             onClick={handleAdvance}
             className="w-full py-3 text-lg font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors"
           >
-            {isLastRound ? 'SEE FINAL RESULTS' : 'NEXT ROUND'}
+            {isLastRound ? 'SEE FINAL PECKING ORDER' : 'NEXT ROUND'}
           </button>
         ) : (
           <p className="text-sm text-green-500">Waiting for host to continue...</p>

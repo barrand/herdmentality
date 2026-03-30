@@ -1,7 +1,7 @@
 {
   "name": "functions",
   "version": "1.0.0",
-  "description": "Herd Mentality Cloud Functions",
+  "description": "Flock Together Cloud Functions",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",

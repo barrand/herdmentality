@@ -9,7 +9,7 @@ export interface GameData {
   hostId: string
   status: 'lobby' | 'playing' | 'finished'
   currentRound: number
-  pinkCowHolder: string | null
+  rottenEggHolder: string | null
   categories: string[]
   playerIds: string[]
   settings: GameSettings
@@ -18,11 +18,11 @@ export interface GameData {
 export interface PlayerData {
   id: string
   name: string
-  cows: number
+  eggs: number
   connected: boolean
 }
 
-export type RoundResult = 'herd' | 'outlier' | 'pink' | 'no-answer'
+export type RoundResult = 'flock' | 'outlier' | 'rotten' | 'no-answer'
 
 export interface RoundData {
   id: string
@@ -32,7 +32,7 @@ export interface RoundData {
   deadline: { seconds: number; nanoseconds: number }
   answerCount: number
   answerGroups: string[]
-  herdAnswer: string[]
+  flockAnswer: string[]
   results: Record<string, RoundResult>
   playerAnswers: Record<string, string>
   commentary?: string

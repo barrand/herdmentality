@@ -1,4 +1,4 @@
-# Herd Mentality - Build Plan
+# Flock Together - Build Plan
 
 ## Build Checklist
 
@@ -11,8 +11,8 @@
 - [ ] **Round Gameplay** -- Build QuestionDisplay, AnswerInput, and countdown timer. Wire up answer submission to Firestore
 - [ ] **Gemini Matching** -- Build Gemini answer grouping in functions/src/gemini.ts: prompt engineering, JSON schema enforcement, normalized-string fallback if API fails
 - [ ] **Cloud Tasks Timers** -- Set up Cloud Tasks for round deadlines and auto-advance timers: schedule, cancel, and early-trigger when all answers are in
-- [ ] **Cloud Functions Scoring** -- Implement scoring with precise rules (tie=no cows, Pink Cow only for sole outlier, no-answer excluded), round advancement, host skip, game end detection, host transfer
-- [ ] **Reveal & Scoreboard** -- Build RevealBoard (animated answer reveal + grouping) and Scoreboard (cow counts, Pink Cow, winner state)
+- [ ] **Cloud Functions Scoring** -- Implement scoring with precise rules (tie=no eggs, Rotten Egg only for sole outlier, no-answer excluded), round advancement, host skip, game end detection, host transfer
+- [ ] **Reveal & Scoreboard** -- Build RevealBoard (animated answer reveal + grouping) and Scoreboard (egg counts, Rotten Egg, winner state)
 - [ ] **Real-time Sync** -- Wire up Firestore onSnapshot listeners via useGame/usePlayer hooks, RTDB presence hooks, anonymous auth auto-sign-in on app load
 - [ ] **Polish & Deploy** -- UI polish (Tailwind styling, responsive layout, transitions), configure Firebase Hosting, test and deploy to GCP
 
@@ -78,9 +78,9 @@ Instead of random character codes, rooms use **common 4-6 letter English words**
    - All players type their answer secretly (countdown timer)
    - Host can **skip the question** at any time (discards round, no scoring, draws next question)
    - Answers revealed simultaneously with grouped fuzzy matching
-   - Scoring: majority answer = +1 cow per matching player; lone outlier gets the Pink Cow
+   - Scoring: majority answer = +1 egg per matching player; lone outlier gets the Rotten Egg
    - **Auto-advance** to next round after ~10 seconds; host can advance early
-5. **End Game** -- First player to 8 cows (without holding the Pink Cow) wins
+5. **End Game** -- First player to 8 eggs (without holding the Rotten Egg) wins
 
 ## Player Identity (Firebase Anonymous Auth)
 
@@ -98,14 +98,14 @@ games/{gameId}
   hostId: string            // UID of current host (transfers on disconnect)
   status: "lobby" | "playing" | "finished"
   currentRound: number
-  pinkCowHolder: string | null
+  rottenEggHolder: string | null
   categories: string[]      // host-defined themes (e.g., ["Disney Movies", "Utah", "MCU"])
   playerIds: string[]       // ordered list of player UIDs (for counting, iteration)
   settings: { totalRounds: number, secondsPerRound: number, autoAdvanceSeconds: number }
 
 games/{gameId}/players/{playerId}    // playerId = Firebase Auth UID
   name: string
-  cows: number
+  eggs: number
   connected: boolean        // synced from Realtime DB presence
 
 games/{gameId}/rounds/{roundNum}
@@ -115,8 +115,8 @@ games/{gameId}/rounds/{roundNum}
   deadline: Timestamp
   answerCount: number                // incremented on each answer submission (for early-trigger detection)
   answerGroups: string[][]           // Gemini-grouped answers, written by Cloud Function after scoring
-  herdAnswer: string[]               // the winning group, written by Cloud Function
-  results: Map<playerId, "herd" | "outlier" | "pink" | "no-answer">
+  flockAnswer: string[]              // the winning group, written by Cloud Function
+  results: Map<playerId, "flock" | "outlier" | "rotten" | "no-answer">
 
 games/{gameId}/rounds/{roundNum}/answers/{playerId}   // SUBCOLLECTION -- prevents peeking
   text: string
@@ -174,26 +174,26 @@ Player connection status is tracked via **Firebase Realtime Database** presence 
 
 **Host disconnection:** If the host disconnects, a Cloud Function **automatically transfers host** to the next connected player in the `playerIds` list. The new host gets all host privileges (skip, advance, start). If the original host reconnects, they rejoin as a regular player.
 
-**Player disconnection mid-round:** Disconnected players who didn't submit an answer are scored as `"no-answer"` (excluded from scoring, can't get cows or Pink Cow). If they reconnect before the deadline, they can still submit.
+**Player disconnection mid-round:** Disconnected players who didn't submit an answer are scored as `"no-answer"` (excluded from scoring, can't get eggs or Rotten Egg). If they reconnect before the deadline, they can still submit.
 
 ## Scoring Rules (Precise)
 
 1. **Collect answers** -- only players who submitted before the deadline are included. Players who didn't submit are scored as `"no-answer"` (excluded entirely).
 2. **Group answers** -- Gemini groups semantically equivalent answers.
-3. **Determine the herd:**
-   - The largest group is the herd.
-   - **If two or more groups tie for largest**, nobody gets cows that round. No Pink Cow assigned. Round is essentially a wash.
-4. **Award cows** -- Every player in the herd group gets +1 cow.
-5. **Pink Cow assignment:**
-   - Pink Cow is ONLY assigned when there is **exactly one player** who is the sole member of their group (a true odd-one-out).
-   - If multiple players gave different unique answers (e.g., 2+ groups of size 1), **nobody** gets the Pink Cow.
-   - If everyone is in the herd, nobody gets the Pink Cow.
-   - Getting the Pink Cow means it transfers FROM whoever held it previously (if anyone).
-6. **Win condition** -- First player to reach 8 cows AND not holding the Pink Cow wins. Checked after each round's scoring.
+3. **Determine the flock:**
+   - The largest group is the flock.
+   - **If two or more groups tie for largest**, nobody gets eggs that round. No Rotten Egg assigned. Round is essentially a wash.
+4. **Award eggs** -- Every player in the flock group gets +1 egg.
+5. **Rotten Egg assignment:**
+   - Rotten Egg is ONLY assigned when there is **exactly one player** who is the sole member of their group (a true odd-one-out).
+   - If multiple players gave different unique answers (e.g., 2+ groups of size 1), **nobody** gets the Rotten Egg.
+   - If everyone is in the flock, nobody gets the Rotten Egg.
+   - Getting the Rotten Egg means it transfers FROM whoever held it previously (if anyone).
+6. **Win condition** -- First player to reach 8 eggs AND not holding the Rotten Egg wins. Checked after each round's scoring.
 
 ## Fuzzy Answer Matching (Gemini 2.0 Flash)
 
-Instead of strict string matching, answers are grouped **semantically** using Gemini. This means "Dogs", "Dog", "A dog", and even "Puppy" can all count as the same herd answer.
+Instead of strict string matching, answers are grouped **semantically** using Gemini. This means "Dogs", "Dog", "A dog", and even "Puppy" can all count as the same flock answer.
 
 **Scoring flow (runs in Cloud Functions):**
 
@@ -203,12 +203,12 @@ flowchart TD
     B --> C[Call Gemini 2.0 Flash]
     C --> D["Return JSON answer groups"]
     D --> E{Largest group unique?}
-    E -->|Yes| F[Herd gets cows]
-    E -->|"Tie for largest"| G[Nobody gets cows]
+    E -->|Yes| F[Flock gets eggs]
+    E -->|"Tie for largest"| G[Nobody gets eggs]
     F --> H{Exactly 1 solo outlier?}
-    H -->|Yes| I[Assign Pink Cow to outlier]
-    H -->|No| J[No Pink Cow change]
-    G --> K[No Pink Cow change]
+    H -->|Yes| I[Assign Rotten Egg to outlier]
+    H -->|No| J[No Rotten Egg change]
+    G --> K[No Rotten Egg change]
     I & J & K --> L[Write results to Firestore]
     L --> M["Schedule auto-advance (Cloud Task)"]
     M --> N[Clients see reveal via listener]
@@ -217,7 +217,7 @@ flowchart TD
 **Gemini prompt structure:**
 
 ```
-You are scoring a party game. Players answered: "{question}"
+You are scoring a party game called Flock Together. Players answered: "{question}"
 
 Answers: ["Dogs", "Dog", "A dog", "Cats", "cat", "Fish"]
 
@@ -233,7 +233,7 @@ Return ONLY valid JSON: { "groups": [["ans1", "ans2"], ["ans3"], ...] }
 - Gemini 2.0 Flash: sub-second response, fraction-of-a-cent cost per call
 - JSON response mode enforced via `responseMimeType: "application/json"` + schema
 - **Fallback:** If Gemini call fails, degrade to normalized string matching (lowercase, trim, strip articles "a"/"the", depluralize)
-- **Transparency:** The reveal screen shows grouped answers so players see *why* they matched
+- **Transparency:** The reveal screen shows grouped answers so players see *why* they were in the same flock
 
 **Cost estimate:** ~$0.00001 per round (a few dozen tokens in, a few dozen out at Flash pricing). A full game of 15 rounds costs a fraction of a cent.
 
@@ -246,7 +246,7 @@ When categories ARE provided and the host starts the game, a Cloud Function send
 **Gemini prompt structure:**
 
 ```
-Generate 25 fun Herd Mentality party game questions themed around
+Generate 25 fun Flock Together party game questions themed around
 these categories: Disney Movies, Utah, MCU
 
 Questions should ask for opinions, favorites, or associations where
@@ -278,7 +278,7 @@ Timers are **server-authoritative** using Cloud Tasks. No reliance on client clo
 - **startGame** (callable, host-only) -- If categories exist, calls Gemini to generate themed questions and merges into pool. Draws first question, creates round 1 doc, schedules deadline Cloud Task.
 - **submitAnswer** (callable) -- Writes answer to subcollection, increments `answerCount`. If all players have answered, cancels deadline task and triggers scoring immediately.
 - **scoreRound** (triggered by Cloud Task or early-trigger) -- Reads answers from subcollection, calls Gemini for grouping, applies scoring rules, writes results, schedules auto-advance task.
-- **advanceRound** (triggered by Cloud Task or host callable) -- Draws next question, creates next round doc, schedules new deadline task. If all rounds complete or someone hit 8 cows, ends game.
+- **advanceRound** (triggered by Cloud Task or host callable) -- Draws next question, creates next round doc, schedules new deadline task. If all rounds complete or someone hit 8 eggs, ends game.
 - **skipQuestion** (callable, host-only) -- Marks round as `"skipped"`, cancels deadline task, triggers `advanceRound`.
 - **onPresenceChange** (RTDB trigger) -- Syncs connection status to Firestore. If host disconnects, transfers host to next connected player.
 
@@ -291,13 +291,13 @@ Timers are **server-authoritative** using Cloud Tasks. No reliance on client clo
 
 ## Key UI Components
 
-- **GameHeader** -- Persistent bar on all gameplay screens: round number, room code, your cow count, Pink Cow badge (if held), tappable leaderboard button
-- **LeaderboardModal** -- Bottom sheet / modal overlay showing ranked player list with cow counts and Pink Cow holder; dismissible; non-blocking (doesn't pause the game)
+- **GameHeader** -- Persistent bar on all gameplay screens: round number, room code, your egg count, Rotten Egg badge (if held), tappable pecking order button
+- **LeaderboardModal** -- Bottom sheet / modal overlay showing ranked player list with egg counts and Rotten Egg holder; dismissible; non-blocking (doesn't pause the game)
 - **Lobby** -- Player list, room code display (shareable), settings panel for host, **bonus category tag input**, "Submit a Question" form
 - **CategoryInput** -- Tag-style input where host types categories and adds them as chips; visible to all players in lobby
 - **QuestionDisplay** -- Shows current round question with countdown timer; host sees a **"Skip Question"** button
 - **AnswerInput** -- Text input for secret answer submission, confirmation state
-- **RevealBoard** -- Animated reveal of all answers, grouped by response, highlights herd answer, auto-advance countdown
+- **RevealBoard** -- Animated reveal of all answers, grouped by response, highlights flock answer, auto-advance countdown
 - **Scoreboard** -- Full between-round scoreboard with auto-advance countdown
 - **QuestionSubmission** -- Form available in lobby for players to submit custom questions
 
@@ -332,7 +332,7 @@ Timers are **server-authoritative** using Cloud Tasks. No reliance on client clo
   /functions          -- Cloud Functions (Node.js + TypeScript)
     src/
       index.ts        -- Function entry points (callable + triggered)
-      scoring.ts      -- Herd answer + cow logic + Pink Cow rules
+      scoring.ts      -- Flock answer + egg logic + Rotten Egg rules
       gemini.ts       -- Gemini API: answer grouping + question generation + fallbacks
       questions.ts    -- Question pool management (draw, mark used, reset)
       timers.ts       -- Cloud Tasks scheduling + cancellation helpers

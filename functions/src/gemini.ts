@@ -18,7 +18,7 @@ export async function groupAnswersWithGemini(question: string, answers: string[]
 
   const model = getModel()
 
-  const prompt = `You are a witty host scoring a party game called Herd Mentality. Players answered the question: "${question}"
+  const prompt = `You are a witty host scoring a party game called Flock Together. Players answered the question: "${question}"
 
 The submitted answers are: ${JSON.stringify(answers)}
 
@@ -70,7 +70,7 @@ export async function generateQuestionsFromCategories(categories: string[]): Pro
 
   const model = getModel()
 
-  const prompt = `Generate 25 fun Herd Mentality party game questions themed around these categories: ${categories.join(', ')}
+  const prompt = `Generate 25 fun Flock Together party game questions themed around these categories: ${categories.join(', ')}
 
 Questions should ask for opinions, favorites, or associations where many people are likely to give the same answer. Mix categories throughout. Vary question styles (favorites, "name one...", "what would you...", etc.)
 

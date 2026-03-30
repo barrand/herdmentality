@@ -29,7 +29,7 @@ export default function Lobby({ game, players, isHost, currentPlayer }: Props) {
     <div className="min-h-screen bg-green-50 px-4 py-6">
       <div className="max-w-sm mx-auto space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-green-900">HERD MENTALITY</h1>
+          <h1 className="text-2xl font-bold text-green-900">FLOCK TOGETHER</h1>
           <div className="mt-2 flex items-center justify-center gap-2">
             <span className="text-sm text-green-600">Room:</span>
             <span className="text-3xl font-bold text-green-800 tracking-wider">{game.code}</span>
@@ -45,7 +45,7 @@ export default function Lobby({ game, players, isHost, currentPlayer }: Props) {
 
         <div>
           <h2 className="text-sm font-semibold text-green-700 uppercase tracking-wide mb-2">
-            The Barn ({players.length})
+            The Henhouse ({players.length})
           </h2>
           <ul className="bg-white rounded-xl border border-green-200 divide-y divide-green-100">
             {players.map((p) => (

@@ -10,7 +10,7 @@ interface Props {
 
 export default function Scoreboard({ game, players, isHost, isFinal }: Props) {
   const navigate = useNavigate()
-  const sorted = [...players].sort((a, b) => b.cows - a.cows)
+  const sorted = [...players].sort((a, b) => b.eggs - a.eggs)
   const winner = isFinal ? sorted[0] : null
 
   return (
@@ -19,17 +19,17 @@ export default function Scoreboard({ game, players, isHost, isFinal }: Props) {
         {isFinal && winner && (
           <div className="text-center space-y-2">
             <p className="text-3xl font-bold text-green-900">GAME OVER!</p>
-            <p className="text-5xl">🏆🐄</p>
+            <p className="text-5xl">🏆🐔</p>
             <p className="text-2xl font-bold text-green-800">
-              {winner.name} WINS THE RANCH!
+              {winner.name} RULES THE ROOST!
             </p>
-            <p className="text-green-600">with {winner.cows} cows</p>
+            <p className="text-green-600">with {winner.eggs} eggs</p>
           </div>
         )}
 
         {!isFinal && (
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-green-900">THE RANCH LEDGER</h2>
+            <h2 className="text-2xl font-bold text-green-900">THE PECKING ORDER</h2>
             <p className="text-green-600 mt-1">Round {game.currentRound} of {game.settings.totalRounds}</p>
           </div>
         )}
@@ -41,19 +41,19 @@ export default function Scoreboard({ game, players, isHost, isFinal }: Props) {
                 {i + 1}. {player.name}
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-lg">{'🐄'.repeat(Math.min(player.cows, 10))}</span>
-                {player.cows > 10 && <span className="text-sm text-green-600">x{player.cows}</span>}
-                {game.pinkCowHolder === player.id && (
-                  <span className="text-pink-500 font-bold text-sm">🩷🐄</span>
+                <span className="text-lg">{'🥚'.repeat(Math.min(player.eggs, 10))}</span>
+                {player.eggs > 10 && <span className="text-sm text-green-600">x{player.eggs}</span>}
+                {game.rottenEggHolder === player.id && (
+                  <span className="text-lime-700 font-bold text-sm">🤢🥚</span>
                 )}
               </div>
             </li>
           ))}
         </ul>
 
-        {game.pinkCowHolder && (
-          <p className="text-center text-pink-600 text-sm font-medium">
-            {players.find((p) => p.id === game.pinkCowHolder)?.name} has the Pink Cow!
+        {game.rottenEggHolder && (
+          <p className="text-center text-lime-700 text-sm font-medium">
+            {players.find((p) => p.id === game.rottenEggHolder)?.name} has the Rotten Egg!
           </p>
         )}
 
@@ -63,13 +63,13 @@ export default function Scoreboard({ game, players, isHost, isFinal }: Props) {
               onClick={() => navigate('/')}
               className="w-full py-4 text-lg font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors"
             >
-              ROUND 'EM UP AGAIN
+              ANOTHER CLUTCH
             </button>
             <button
               onClick={() => navigate('/')}
               className="w-full py-3 text-lg font-medium text-green-700 bg-white border-2 border-green-300 rounded-xl hover:bg-green-50 transition-colors"
             >
-              BACK TO THE FARM
+              BACK TO THE COOP
             </button>
           </div>
         )}
