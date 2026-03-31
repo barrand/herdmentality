@@ -15,34 +15,36 @@ export default function QuestionSubmission({ onSubmit, submittedQuestions }: Pro
   }
 
   return (
-    <div className="space-y-2">
-      <h2 className="text-sm font-semibold text-green-700 uppercase tracking-wide">
-        Submit a Question (optional)
-      </h2>
-      <div className="flex gap-2">
+    <div>
+      <h3 className="font-headline text-lg font-semibold text-primary mb-3 px-1">Submit a Question</h3>
+
+      <div className="relative mb-3">
         <input
           type="text"
-          placeholder="Type a question..."
+          placeholder="Type your own question..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          className="flex-1 px-3 py-2 rounded-lg border border-green-200 bg-white text-sm focus:border-green-500 focus:outline-none"
+          className="w-full bg-surface-container-lowest border-none rounded-xl py-4 pl-5 pr-14 shadow-[0_4px_12px_rgba(27,28,26,0.03)] focus:ring-1 focus:ring-primary/20 placeholder:text-on-surface-variant/40 text-sm italic font-headline"
           maxLength={200}
         />
         <button
           onClick={handleSubmit}
           disabled={!text.trim()}
-          className="px-4 py-2 text-sm font-bold text-white bg-green-600 rounded-lg disabled:opacity-50"
+          className="absolute right-2 top-2 bottom-2 w-10 bg-primary text-on-primary rounded-lg flex items-center justify-center hover:bg-primary-container disabled:opacity-50 transition-colors"
         >
-          +
+          <span className="material-symbols-outlined">send</span>
         </button>
       </div>
+
       {submittedQuestions.length > 0 && (
-        <ul className="space-y-1">
+        <div className="space-y-2">
           {submittedQuestions.map((q, i) => (
-            <li key={i} className="text-sm text-green-600 italic">"{q}"</li>
+            <div key={i} className="px-4 py-3 bg-surface-container/50 rounded-lg border border-dashed border-outline-variant/30">
+              <p className="font-headline italic text-on-surface-variant text-sm">"{q}"</p>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   )

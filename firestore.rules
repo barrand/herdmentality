@@ -34,7 +34,8 @@ service cloud.firestore {
     }
 
     match /games/{gameId}/questionPool/{questionId} {
-      allow read: if false;
+      allow read: if request.auth != null
+        && request.auth.uid in get(/databases/$(database)/documents/games/$(gameId)).data.playerIds;
       allow write: if false;
     }
   }

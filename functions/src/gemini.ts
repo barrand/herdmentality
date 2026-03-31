@@ -18,28 +18,29 @@ export async function groupAnswersWithGemini(question: string, answers: string[]
 
   const model = getModel()
 
-  const prompt = `You are a witty host scoring a party game called Flock Together. Players answered the question: "${question}"
+  const prompt = `You are scoring a party game called Flock Together. Players answered: "${question}"
 
-The submitted answers are: ${JSON.stringify(answers)}
+Answers: ${JSON.stringify(answers)}
 
 Do TWO things:
 
-1. GROUP answers by semantic equivalence. Answers that refer to the same concept belong in the same group, even if:
-- Different spelling or typos (e.g. "bagette" and "baguette")
-- Plurals vs singular (e.g. "dog" and "dogs")
-- Articles added (e.g. "a cat" and "cat")
-- Synonyms (e.g. "puppy" and "dog")
-- Abbreviations or shorthand
-- Different capitalization
-Sort groups from largest to smallest. Each answer must appear in exactly one group.
+1. GROUP answers that are the SAME SPECIFIC ANSWER, just written differently. Only group together if they clearly mean the exact same thing:
+- Typos/misspellings: "bagette" = "baguette", "chickn" = "chicken"
+- Plurals: "dog" = "dogs"
+- Articles: "a cat" = "cat" = "the cat"
+- Abbreviations: "MJ" = "Michael Jordan" (only if unambiguous in context)
+- Capitalization: "paris" = "Paris"
 
-2. Write a short, funny COMMENTARY (1-2 sentences) to spark debate among the players. You could:
-- Point out an obvious popular answer everyone somehow missed
-- Roast a bizarre outlier answer
-- Note a surprising consensus
-- Question someone's sanity for their answer choice
-- Be playfully sarcastic
-Keep it brief, punchy, and fun. Address the players directly.
+NEVER group different things that are merely in the same category. For example:
+- "Lisa" and "Manon" are DIFFERENT (both K-pop stars, but different people)
+- "Pizza" and "Pasta" are DIFFERENT (both Italian food, but different foods)
+- "BMW" and "Mercedes" are DIFFERENT (both German cars, but different brands)
+- "Lion" and "Tiger" are DIFFERENT (both big cats, but different animals)
+
+When in doubt, keep answers in SEPARATE groups. The game rewards giving the SAME answer, not similar ones.
+Sort groups largest to smallest. Each answer in exactly one group.
+
+2. Write ONE short, funny COMMENTARY sentence (max 15 words) to spark debate among the players. Roast an outlier, note a surprising consensus, or be playfully sarcastic.
 
 Return ONLY valid JSON: {"groups":[["ans1","ans2"],["ans3"]],"commentary":"your witty comment here"}`
 

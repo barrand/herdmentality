@@ -222,6 +222,50 @@ export const skipQuestion = onCall(async (request) => {
   await doAdvanceRound(gameId)
 })
 
+// -- UPDATE CATEGORIES (host-only) --
+export const updateCategories = onCall(async (request) => {
+  const uid = request.auth?.uid
+  if (!uid) throw new HttpsError('unauthenticated', 'Must be signed in')
+
+  const { gameId, categories } = request.data as { gameId: string; categories: string[] }
+  if (!Array.isArray(categories)) throw new HttpsError('invalid-argument', 'Categories must be an array')
+  if (categories.length > 10) throw new HttpsError('invalid-argument', 'Max 10 categories')
+
+  const gameRef = db.collection('games').doc(gameId)
+  const gameSnap = await gameRef.get()
+
+  if (!gameSnap.exists) throw new HttpsError('not-found', 'Game not found')
+  if (gameSnap.data()!.hostId !== uid) throw new HttpsError('permission-denied', 'Only host can update categories')
+  if (gameSnap.data()!.status !== 'lobby') throw new HttpsError('failed-precondition', 'Game already started')
+
+  await gameRef.update({ categories })
+})
+
+// -- SUBMIT CUSTOM QUESTION --
+export const submitCustomQuestion = onCall(async (request) => {
+  const uid = request.auth?.uid
+  if (!uid) throw new HttpsError('unauthenticated', 'Must be signed in')
+
+  const { gameId, text } = request.data as { gameId: string; text: string }
+  if (!text?.trim()) throw new HttpsError('invalid-argument', 'Question text required')
+  if (text.length > 200) throw new HttpsError('invalid-argument', 'Question too long')
+
+  const gameRef = db.collection('games').doc(gameId)
+  const gameSnap = await gameRef.get()
+
+  if (!gameSnap.exists) throw new HttpsError('not-found', 'Game not found')
+  if (gameSnap.data()!.status !== 'lobby') throw new HttpsError('failed-precondition', 'Game already started')
+  if (!gameSnap.data()!.playerIds.includes(uid)) throw new HttpsError('permission-denied', 'Not in this game')
+
+  await gameRef.collection('questionPool').add({
+    text: text.trim(),
+    source: 'custom',
+    used: false,
+    submittedBy: uid,
+    category: null,
+  })
+})
+
 // -- ADVANCE ROUND (callable by host) --
 export const advanceRound = onCall(async (request) => {
   const uid = request.auth?.uid

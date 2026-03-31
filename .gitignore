@@ -16,6 +16,12 @@ dist-ssr
 functions/.env
 functions/lib
 
+# Firebase
+.firebase/
+.agents/
+.claude/
+skills-lock.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

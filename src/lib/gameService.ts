@@ -2,6 +2,8 @@ import { httpsCallable } from 'firebase/functions'
 import {
   doc,
   collection,
+  query,
+  where,
   onSnapshot,
 } from 'firebase/firestore'
 import { db, functions } from './firebase'
@@ -16,6 +18,8 @@ const submitAnswerFn = httpsCallable<{ gameId: string; roundNum: number; answer:
 const skipQuestionFn = httpsCallable<{ gameId: string }, void>(functions, 'skipQuestion')
 const advanceRoundFn = httpsCallable<{ gameId: string }, void>(functions, 'advanceRound')
 const forceEndRoundFn = httpsCallable<{ gameId: string }, void>(functions, 'forceEndRound')
+const updateCategoriesFn = httpsCallable<{ gameId: string; categories: string[] }, void>(functions, 'updateCategories')
+const submitCustomQuestionFn = httpsCallable<{ gameId: string; text: string }, void>(functions, 'submitCustomQuestion')
 
 export async function createGame(playerName: string) {
   const result = await createGameFn({ playerName })
@@ -47,15 +51,23 @@ export async function forceEndRound(gameId: string) {
   await forceEndRoundFn({ gameId })
 }
 
+export async function updateCategories(gameId: string, categories: string[]) {
+  await updateCategoriesFn({ gameId, categories })
+}
+
+export async function submitCustomQuestion(gameId: string, text: string) {
+  await submitCustomQuestionFn({ gameId, text })
+}
+
 // -- Real-time Listeners --
 
-export function onGameUpdate(gameId: string, callback: (data: GameData | null) => void): Unsubscribe {
+export function onGameUpdate(gameId: string, callback: (data: GameData | null) => void) {
   return onSnapshot(doc(db, 'games', gameId), (snap) => {
     callback(snap.exists() ? ({ id: snap.id, ...snap.data() } as GameData) : null)
   })
 }
 
-export function onPlayersUpdate(gameId: string, callback: (players: PlayerData[]) => void): Unsubscribe {
+export function onPlayersUpdate(gameId: string, callback: (players: PlayerData[]) => void) {
   const playersRef = collection(db, 'games', gameId, 'players')
   return onSnapshot(playersRef, (snap) => {
     const players = snap.docs.map((d) => ({ id: d.id, ...d.data() } as PlayerData))
@@ -63,8 +75,18 @@ export function onPlayersUpdate(gameId: string, callback: (players: PlayerData[]
   })
 }
 
-export function onRoundUpdate(gameId: string, roundNum: number, callback: (data: RoundData | null) => void): Unsubscribe {
+export function onRoundUpdate(gameId: string, roundNum: number, callback: (data: RoundData | null) => void) {
   return onSnapshot(doc(db, 'games', gameId, 'rounds', String(roundNum)), (snap) => {
     callback(snap.exists() ? ({ id: snap.id, ...snap.data() } as RoundData) : null)
+  })
+}
+
+export function onCustomQuestionsUpdate(gameId: string, callback: (questions: string[]) => void) {
+  const q = query(
+    collection(db, 'games', gameId, 'questionPool'),
+    where('source', '==', 'custom'),
+  )
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => d.data().text as string))
   })
 }

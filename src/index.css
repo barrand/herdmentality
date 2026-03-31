@@ -1,1 +1,81 @@
 @import "tailwindcss";
+
+@theme {
+  --font-headline: "Noto Serif", serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+
+  --color-primary: #384e3b;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #4f6652;
+  --color-on-primary-container: #c9e3c9;
+  --color-primary-fixed: #cfe9d0;
+  --color-primary-fixed-dim: #b4cdb5;
+  --color-on-primary-fixed: #0a2010;
+  --color-on-primary-fixed-variant: #364c39;
+
+  --color-secondary: #795828;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fdd094;
+  --color-on-secondary-container: #785727;
+  --color-secondary-fixed: #ffddb3;
+  --color-secondary-fixed-dim: #ebbf85;
+  --color-on-secondary-fixed: #291800;
+  --color-on-secondary-fixed-variant: #5f4112;
+
+  --color-tertiary: #53472f;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #6c5f45;
+  --color-on-tertiary-container: #ecdab9;
+  --color-tertiary-fixed: #f3e0bf;
+  --color-tertiary-fixed-dim: #d6c5a5;
+  --color-on-tertiary-fixed: #231a06;
+  --color-on-tertiary-fixed-variant: #51452d;
+
+  --color-surface: #fbf9f6;
+  --color-on-surface: #1b1c1a;
+  --color-surface-variant: #e4e2df;
+  --color-on-surface-variant: #434842;
+  --color-surface-container: #efeeeb;
+  --color-surface-container-low: #f5f3f0;
+  --color-surface-container-high: #eae8e5;
+  --color-surface-container-highest: #e4e2df;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-bright: #fbf9f6;
+  --color-surface-dim: #dbdad7;
+  --color-surface-tint: #4d6450;
+
+  --color-background: #fbf9f6;
+  --color-on-background: #1b1c1a;
+
+  --color-outline: #737972;
+  --color-outline-variant: #c3c8c0;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-inverse-surface: #30312f;
+  --color-inverse-on-surface: #f2f0ed;
+  --color-inverse-primary: #b4cdb5;
+}
+
+.linen-texture {
+  background-image: repeating-linear-gradient(45deg, rgba(27,28,26, 0.01) 0px, rgba(27,28,26, 0.01) 1px, transparent 1px, transparent 10px),
+                    repeating-linear-gradient(-45deg, rgba(27,28,26, 0.01) 0px, rgba(27,28,26, 0.01) 1px, transparent 1px, transparent 10px);
+}
+
+@keyframes rotten-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-6deg); }
+  30% { transform: rotate(5deg); }
+  45% { transform: rotate(-4deg); }
+  60% { transform: rotate(3deg); }
+  75% { transform: rotate(-2deg); }
+  90% { transform: rotate(1deg); }
+}
+
+.animate-rotten-wobble {
+  animation: rotten-wobble 0.8s ease-in-out;
+}

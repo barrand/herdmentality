@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { initAuth, getUid } from '../lib/auth'
+import { initAuth } from '../lib/auth'
 import type { PlayerData } from '../types'
 
 export function useAuth() {

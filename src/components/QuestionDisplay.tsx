@@ -70,28 +70,37 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
   return (
     <div className="flex-1 flex flex-col px-4 py-6">
       <div className="text-center mb-4">
-        <p className={`text-3xl font-bold tabular-nums ${expired ? 'text-red-600' : 'text-green-900'}`}>
+        <p className={`font-headline text-3xl font-bold tabular-nums ${expired ? 'text-error' : 'text-on-surface'}`}>
           {expired ? "TIME'S UP!" : `0:${String(timeLeft).padStart(2, '0')}`}
         </p>
-        <div className="mt-2 h-2 bg-green-200 rounded-full overflow-hidden">
+        <div className="mt-2 h-2 bg-surface-container-high rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-250 ${expired ? 'bg-red-500' : 'bg-green-500'}`}
+            className={`h-full rounded-full transition-all duration-250 ${expired ? 'bg-error' : 'bg-primary'}`}
             style={{ width: `${timerPercent}%` }}
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border-2 border-green-200 p-6 text-center shadow-sm">
-        <p className="text-xl font-bold text-green-900 leading-relaxed">
+      <div className="bg-surface-container-lowest rounded-2xl border-2 border-outline-variant/30 p-6 text-center shadow-sm">
+        <p className="font-headline text-xl font-bold text-on-surface leading-relaxed">
           {round.question}
         </p>
       </div>
 
+      {isHost && !expired && (
+        <button
+          onClick={handleSkip}
+          className="mt-2 text-sm text-outline underline hover:text-on-surface-variant self-center font-body"
+        >
+          Skip question
+        </button>
+      )}
+
       <div className="mt-6 space-y-3">
         {expired && !submitted ? (
           <div className="text-center py-4">
-            <p className="text-red-600 font-bold text-lg">Too slow!</p>
-            <p className="text-green-500 mt-1">You didn't answer in time.</p>
+            <p className="text-error font-bold text-lg font-body">Too slow!</p>
+            <p className="text-outline mt-1 font-body">You didn't answer in time.</p>
           </div>
         ) : !submitted ? (
           <>
@@ -101,39 +110,31 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              className="w-full px-4 py-3 text-lg rounded-xl border-2 border-green-200 bg-white focus:border-green-500 focus:outline-none"
+              className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-xl px-4 py-3 text-lg text-on-surface placeholder:text-outline/50 font-body focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               maxLength={100}
               autoFocus
             />
             <button
               onClick={handleSubmit}
               disabled={!answer.trim() || submitting}
-              className="w-full py-4 text-lg font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 active:bg-green-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-primary text-on-primary h-14 rounded-xl font-body font-semibold tracking-wide shadow-[0_12px_32px_rgba(56,78,59,0.15)] hover:opacity-90 active:scale-95 disabled:opacity-50 transition-all"
             >
               {submitting ? 'Clucking in...' : 'CLUCK IN'}
             </button>
           </>
         ) : (
           <div className="text-center py-4">
-            <p className="text-green-700 font-medium">You answered:</p>
-            <p className="text-2xl font-bold text-green-900 mt-1">"{answer}"</p>
-            <p className="text-green-500 mt-2">Clucked in</p>
+            <p className="text-on-surface-variant font-medium font-body">You answered:</p>
+            <p className="font-headline text-2xl font-bold text-on-surface mt-1">"{answer}"</p>
+            <p className="text-outline mt-2 font-body">Clucked in</p>
           </div>
         )}
       </div>
 
       <div className="mt-auto pt-6 text-center">
-        <p className="text-sm text-green-500">
+        <p className="text-sm text-outline font-body">
           {round.answerCount} of {players.length} players answered
         </p>
-        {isHost && !expired && (
-          <button
-            onClick={handleSkip}
-            className="mt-3 text-sm text-green-400 underline hover:text-green-600"
-          >
-            Skip to next nest
-          </button>
-        )}
       </div>
     </div>
   )

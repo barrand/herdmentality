@@ -1,14 +1,16 @@
 import type { GameData, RoundData, PlayerData } from '../types'
 import { advanceRound } from '../lib/gameService'
+import RottenEgg from './RottenEgg'
 
 interface Props {
   game: GameData
   round: RoundData
   players: PlayerData[]
   isHost: boolean
+  currentPlayerId: string | null
 }
 
-export default function RevealBoard({ game, round, players, isHost }: Props) {
+export default function RevealBoard({ game, round, players, isHost, currentPlayerId }: Props) {
   const playerNameById = (id: string) => players.find((p) => p.id === id)?.name ?? id
 
   if (round.status === 'revealing') {
@@ -16,8 +18,8 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="animate-pulse text-center space-y-3">
           <p className="text-4xl">🐔</p>
-          <p className="text-xl font-bold text-green-900">Checking all answers...</p>
-          <p className="text-green-500 text-sm">The flock is being counted</p>
+          <p className="font-headline text-xl font-bold text-on-surface">Checking all answers...</p>
+          <p className="text-outline text-sm font-body">The flock is being counted</p>
         </div>
       </div>
     )
@@ -45,13 +47,18 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
   const resultBadge = (result: string) => {
     switch (result) {
       case 'flock':
-        return <span className="text-xs font-bold bg-green-200 text-green-800 px-2 py-0.5 rounded-full">FLOCK</span>
+        return <span className="text-xs font-bold bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full font-label">FLOCK</span>
       case 'rotten':
-        return <span className="text-xs font-bold bg-lime-200 text-lime-800 px-2 py-0.5 rounded-full">ROTTEN EGG</span>
+        return (
+          <span className="flex items-center gap-1 text-xs font-bold bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full font-label">
+            <RottenEgg size={14} animate />
+            ROTTEN EGG
+          </span>
+        )
       case 'outlier':
-        return <span className="text-xs font-bold bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">FLOWN THE COOP</span>
+        return <span className="text-xs font-bold bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full font-label">FLOWN THE COOP</span>
       case 'no-answer':
-        return <span className="text-xs font-bold bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">NO ANSWER</span>
+        return <span className="text-xs font-bold bg-surface-container text-outline px-2 py-0.5 rounded-full font-label">NO ANSWER</span>
       default:
         return null
     }
@@ -60,63 +67,75 @@ export default function RevealBoard({ game, round, players, isHost }: Props) {
   return (
     <div className="flex-1 px-4 py-6 space-y-4">
       <div className="text-center">
-        <p className="text-lg font-bold text-green-900">{round.question}</p>
+        <p className="font-headline text-lg font-bold text-on-surface">{round.question}</p>
       </div>
 
       {hasFlock ? (
-        <div className="bg-green-100 border-2 border-green-300 rounded-2xl p-4 text-center">
-          <p className="text-sm font-bold text-green-700 uppercase tracking-wide">The Flock Said</p>
-          <p className="text-2xl font-bold text-green-900 mt-1">"{round.flockAnswer?.[0]}"</p>
+        <div className="bg-primary-fixed/50 border-2 border-primary-fixed-dim rounded-2xl p-4 text-center">
+          <p className="font-label text-sm font-bold text-primary uppercase tracking-wide">The Flock Said</p>
+          <p className="font-headline text-2xl font-bold text-on-surface mt-1">"{round.flockAnswer?.[0]}"</p>
         </div>
       ) : (
-        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-4 text-center">
-          <p className="text-lg font-bold text-yellow-800">No Flock!</p>
-          <p className="text-yellow-700 text-sm">No eggs awarded this round.</p>
+        <div className="bg-secondary-fixed/30 border-2 border-secondary-fixed-dim rounded-2xl p-4 text-center">
+          <p className="font-headline text-lg font-bold text-secondary">No Flock!</p>
+          <p className="text-on-surface-variant text-sm font-body">No eggs awarded this round.</p>
         </div>
       )}
 
       {round.commentary && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
-          <p className="text-amber-900 text-sm italic">"{round.commentary}"</p>
+        <div className="bg-secondary-fixed/20 border border-secondary-fixed-dim/50 rounded-xl p-3 text-center">
+          <p className="text-on-surface-variant text-sm italic font-headline">"{round.commentary}"</p>
         </div>
       )}
 
       <div className="space-y-2">
-        {sortedPlayers.map(([playerId, result]) => (
-          <div
-            key={playerId}
-            className={`rounded-xl p-3 border flex items-center justify-between ${
-              result === 'flock'
-                ? 'bg-green-50 border-green-300'
-                : result === 'rotten'
-                ? 'bg-lime-50 border-lime-300'
-                : 'bg-white border-green-200'
-            }`}
-          >
-            <div className="flex flex-col gap-0.5">
-              <span className="text-green-900 font-medium">{playerNameById(playerId)}</span>
-              <span className="text-green-500 text-sm">
-                {playerAnswers[playerId] ? `"${playerAnswers[playerId]}"` : '—'}
-              </span>
+        {sortedPlayers.map(([playerId, result]) => {
+          const isYou = playerId === currentPlayerId
+          return (
+            <div
+              key={playerId}
+              className={`rounded-xl p-3 border flex items-center justify-between ${
+                isYou ? 'ring-2 ring-secondary-fixed-dim ' : ''
+              }${
+                result === 'flock'
+                  ? 'bg-primary-fixed/20 border-primary-fixed-dim'
+                  : result === 'rotten'
+                  ? 'bg-tertiary-fixed/20 border-tertiary-fixed-dim'
+                  : 'bg-surface-container-lowest border-outline-variant/30'
+              }`}
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className="text-on-surface font-medium font-body">
+                  {playerNameById(playerId)}
+                  {isYou && (
+                    <span className="ml-1.5 text-xs font-bold bg-secondary-fixed text-on-secondary-fixed-variant px-1.5 py-0.5 rounded-full font-label">
+                      you
+                    </span>
+                  )}
+                </span>
+                <span className="text-outline text-sm font-body">
+                  {playerAnswers[playerId] ? `"${playerAnswers[playerId]}"` : '—'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {resultBadge(result)}
+                {result === 'flock' && <span className="text-sm font-bold text-primary font-body">+1</span>}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {resultBadge(result)}
-              {result === 'flock' && <span className="text-sm font-bold text-green-700">+1</span>}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="text-center pt-4 space-y-2">
         {isHost ? (
           <button
             onClick={handleAdvance}
-            className="w-full py-3 text-lg font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors"
+            className="w-full bg-primary text-on-primary py-3 rounded-xl font-body font-semibold tracking-wide hover:opacity-90 transition-all"
           >
             {isLastRound ? 'SEE FINAL PECKING ORDER' : 'NEXT ROUND'}
           </button>
         ) : (
-          <p className="text-sm text-green-500">Waiting for host to continue...</p>
+          <p className="text-sm text-outline font-body">Waiting for host to continue...</p>
         )}
       </div>
     </div>

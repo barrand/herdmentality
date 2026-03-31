@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { GameData, PlayerData } from '../types'
-import { startGame } from '../lib/gameService'
+import { startGame, updateCategories, submitCustomQuestion, onCustomQuestionsUpdate } from '../lib/gameService'
+import CategoryInput from './CategoryInput'
+import QuestionSubmission from './QuestionSubmission'
 
 interface Props {
   game: GameData
@@ -12,6 +14,13 @@ interface Props {
 export default function Lobby({ game, players, isHost, currentPlayer }: Props) {
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState('')
+  const [customQuestions, setCustomQuestions] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!game.id) return
+    const unsub = onCustomQuestionsUpdate(game.id, setCustomQuestions)
+    return unsub
+  }, [game.id])
 
   const handleStart = async () => {
     if (players.length < 3) return setError('Need at least 3 players')
@@ -25,76 +34,165 @@ export default function Lobby({ game, players, isHost, currentPlayer }: Props) {
     }
   }
 
+  const handleAddCategory = async (category: string) => {
+    try {
+      await updateCategories(game.id, [...game.categories, category])
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to add category')
+    }
+  }
+
+  const handleRemoveCategory = async (category: string) => {
+    try {
+      await updateCategories(game.id, game.categories.filter((c) => c !== category))
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to remove category')
+    }
+  }
+
+  const handleSubmitQuestion = async (text: string) => {
+    try {
+      await submitCustomQuestion(game.id, text)
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to submit question')
+    }
+  }
+
+  const buttonLabel = starting
+    ? 'Starting...'
+    : players.length < 3
+    ? `Need ${3 - players.length} more players`
+    : 'Start Game'
+
   return (
-    <div className="min-h-screen bg-green-50 px-4 py-6">
-      <div className="max-w-sm mx-auto space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-green-900">FLOCK TOGETHER</h1>
-          <div className="mt-2 flex items-center justify-center gap-2">
-            <span className="text-sm text-green-600">Room:</span>
-            <span className="text-3xl font-bold text-green-800 tracking-wider">{game.code}</span>
+    <div className="min-h-screen bg-surface linen-texture font-body text-on-surface">
+      {/* Top App Bar */}
+      <header className="flex justify-between items-center w-full px-6 py-4 max-w-md mx-auto">
+        <h1 className="font-headline text-2xl font-semibold text-primary tracking-tight italic">Flock Together</h1>
+        <button
+          onClick={() => navigator.clipboard.writeText(game.code)}
+          className="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full border border-outline-variant/20"
+        >
+          <span className="material-symbols-outlined text-sm text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>content_paste</span>
+          <span className="font-headline text-sm font-bold text-secondary tracking-widest uppercase">ROOM: {game.code}</span>
+        </button>
+      </header>
+
+      <main className="max-w-md mx-auto px-6 pt-4 pb-32">
+        {/* Header + Room Code */}
+        <div className="text-center mb-8">
+          <h2 className="font-headline text-4xl font-bold text-on-surface mb-2 tracking-tight">FLOCK TOGETHER</h2>
+          <p className="text-on-surface-variant text-sm">Waiting in the lobby</p>
+
+          <div className="mt-6 inline-flex items-center gap-4 bg-surface-container-lowest px-8 py-4 rounded-xl shadow-[0_12px_32px_rgba(27,28,26,0.05)] border border-outline-variant/10">
+            <div className="flex flex-col items-center">
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary mb-1">Room Code</span>
+              <span className="font-headline text-3xl font-bold text-on-surface tracking-[0.3em]">{game.code}</span>
+            </div>
             <button
               onClick={() => navigator.clipboard.writeText(game.code)}
-              className="text-green-500 hover:text-green-700"
-              title="Copy room code"
+              className="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-secondary hover:bg-tertiary-fixed-dim transition-colors"
             >
-              📋
+              <span className="material-symbols-outlined text-xl">content_copy</span>
             </button>
           </div>
         </div>
 
-        <div>
-          <h2 className="text-sm font-semibold text-green-700 uppercase tracking-wide mb-2">
-            The Henhouse ({players.length})
-          </h2>
-          <ul className="bg-white rounded-xl border border-green-200 divide-y divide-green-100">
-            {players.map((p) => (
-              <li key={p.id} className="px-4 py-3 flex items-center gap-3">
-                <span className={`w-2 h-2 rounded-full ${p.connected ? 'bg-green-500' : 'bg-gray-300'}`} />
-                <span className="text-green-900 font-medium">
-                  {p.name}
-                  {p.id === game.hostId && ' (host)'}
-                  {p.id === currentPlayer?.id && ' ← you'}
-                </span>
+        {/* The Henhouse */}
+        <section className="mb-8">
+          <div className="flex justify-between items-end mb-3 px-1">
+            <h3 className="font-headline text-xl font-semibold text-primary">
+              The Henhouse <span className="text-on-surface-variant font-normal text-sm ml-1">({players.length})</span>
+            </h3>
+          </div>
+          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_12px_32px_rgba(27,28,26,0.05)] border border-outline-variant/15 relative overflow-hidden">
+            <span className="material-symbols-outlined absolute -top-2.5 -left-2.5 opacity-15 -rotate-[15deg] text-primary text-6xl pointer-events-none">eco</span>
+            <ul className="space-y-4 relative z-10">
+              {players.map((p) => (
+                <li key={p.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-2 h-2 rounded-full ${p.connected ? 'bg-primary shadow-[0_0_8px_rgba(56,78,59,0.4)]' : 'bg-outline-variant'}`} />
+                    <span className="font-medium">
+                      {p.name}
+                      {(p.id === game.hostId || p.id === currentPlayer?.id) && (
+                        <span className="text-on-surface-variant text-xs font-normal ml-1">
+                          {p.id === game.hostId && '(host)'}
+                          {p.id === currentPlayer?.id && ' ← you'}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </li>
+              ))}
+              <li className="pt-2 border-t border-outline-variant/10">
+                <p className="italic text-on-surface-variant text-sm text-center">Waiting for others...</p>
               </li>
-            ))}
-            <li className="px-4 py-3 text-green-400 italic text-sm">
-              Waiting for others...
-            </li>
-          </ul>
-        </div>
+            </ul>
+            <span className="material-symbols-outlined absolute -bottom-4 -right-4 opacity-15 rotate-[165deg] text-primary text-6xl pointer-events-none">account_tree</span>
+          </div>
+        </section>
 
+        {/* Game Settings */}
         {isHost && (
-          <>
-            <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-green-700 uppercase tracking-wide">Settings</h2>
-              <div className="flex items-center justify-between bg-white rounded-xl border border-green-200 px-4 py-3">
-                <span className="text-green-800">Rounds</span>
-                <span className="font-bold text-green-900">{game.settings.totalRounds}</span>
+          <section className="mb-8">
+            <h3 className="font-headline text-lg font-semibold text-primary mb-3 px-1">Game Settings</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10 flex flex-col gap-1">
+                <span className="font-label text-[10px] uppercase tracking-wider text-secondary">Rounds</span>
+                <span className="font-headline text-xl font-bold">{game.settings.totalRounds}</span>
               </div>
-              <div className="flex items-center justify-between bg-white rounded-xl border border-green-200 px-4 py-3">
-                <span className="text-green-800">Timer</span>
-                <span className="font-bold text-green-900">{game.settings.secondsPerRound}s</span>
+              <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10 flex flex-col gap-1">
+                <span className="font-label text-[10px] uppercase tracking-wider text-secondary">Timer</span>
+                <span className="font-headline text-xl font-bold">{game.settings.secondsPerRound}s</span>
               </div>
             </div>
+          </section>
+        )}
 
+        {/* Bonus Categories */}
+        <section className="mb-8">
+          <CategoryInput
+            categories={game.categories}
+            editable={isHost}
+            onAdd={handleAddCategory}
+            onRemove={handleRemoveCategory}
+          />
+        </section>
+
+        {/* Submit Question */}
+        <section className="mb-12">
+          <QuestionSubmission
+            onSubmit={handleSubmitQuestion}
+            submittedQuestions={customQuestions}
+          />
+        </section>
+
+        {error && <p className="text-center text-error text-sm mb-4">{error}</p>}
+      </main>
+
+      {/* Fixed Bottom Action */}
+      {isHost ? (
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background/95 to-transparent z-40">
+          <div className="max-w-md mx-auto">
             <button
               onClick={handleStart}
               disabled={starting || players.length < 3}
-              className="w-full py-4 text-lg font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 active:bg-green-800 disabled:opacity-50 transition-colors"
+              className="w-full bg-primary text-on-primary h-16 rounded-xl font-headline font-bold text-lg shadow-[0_12px_32px_rgba(56,78,59,0.25)] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 transition-transform duration-200"
             >
-              {starting ? 'Starting...' : players.length < 3 ? `Need ${3 - players.length} more players` : 'START GAME'}
+              <span>{buttonLabel}</span>
+              {players.length >= 3 && !starting && (
+                <span className="material-symbols-outlined">play_arrow</span>
+              )}
             </button>
-            {error && <p className="text-center text-red-600 text-sm">{error}</p>}
-          </>
-        )}
-
-        {!isHost && (
-          <div className="text-center py-8">
-            <p className="text-green-600 animate-pulse">Waiting for host to start...</p>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background/95 to-transparent z-40">
+          <div className="max-w-md mx-auto text-center">
+            <p className="text-on-surface-variant animate-pulse">Waiting for host to start...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

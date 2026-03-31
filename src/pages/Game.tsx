@@ -46,16 +46,16 @@ export default function Game() {
 
   if (authLoading || gameLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-green-50">
-        <p className="text-lg text-green-800">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-surface linen-texture">
+        <p className="text-lg text-on-surface-variant font-body">Loading...</p>
       </div>
     )
   }
 
   if (lookupError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-green-50">
-        <p className="text-lg text-red-600">{lookupError}</p>
+      <div className="min-h-screen flex items-center justify-center bg-surface linen-texture">
+        <p className="text-lg text-error font-body">{lookupError}</p>
       </div>
     )
   }
@@ -85,9 +85,10 @@ export default function Game() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-green-50">
+    <div className="min-h-screen flex flex-col bg-surface linen-texture">
       <GameHeader
         game={game}
+        players={players}
         currentPlayer={currentPlayer}
         round={round}
       />
@@ -107,6 +108,7 @@ export default function Game() {
           round={round}
           players={players}
           isHost={isHost}
+          currentPlayerId={uid}
         />
       )}
     </div>
