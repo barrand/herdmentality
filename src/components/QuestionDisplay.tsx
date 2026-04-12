@@ -132,7 +132,7 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
             <button
               onClick={handleSubmit}
               disabled={!answer.trim() || submitting}
-              className="w-full bg-primary text-on-primary h-14 rounded-xl font-body font-semibold tracking-wide shadow-[0_12px_32px_rgba(56,78,59,0.15)] hover:opacity-90 active:scale-95 disabled:opacity-50 transition-all"
+              className="w-full bg-primary text-on-primary h-14 rounded-xl font-body font-semibold tracking-wide shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:opacity-90 active:scale-95 disabled:opacity-50 transition-all"
             >
               {submitting ? 'Clucking in...' : 'CLUCK IN'}
             </button>

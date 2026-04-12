@@ -86,7 +86,7 @@ export default function Lobby({ game, players, isHost, currentPlayer }: Props) {
           <h2 className="font-headline text-4xl font-bold text-on-surface mb-2 tracking-tight">FLOCK TOGETHER</h2>
           <p className="text-on-surface-variant text-sm">Waiting in the lobby</p>
 
-          <div className="mt-6 inline-flex items-center gap-4 bg-surface-container-lowest px-8 py-4 rounded-xl shadow-[0_12px_32px_rgba(27,28,26,0.05)] border border-outline-variant/10">
+          <div className="mt-6 inline-flex items-center gap-4 bg-surface-container-lowest px-8 py-4 rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.3)] border border-outline-variant/10">
             <div className="flex flex-col items-center">
               <span className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary mb-1">Room Code</span>
               <span className="font-headline text-3xl font-bold text-on-surface tracking-[0.3em]">{game.code}</span>
@@ -107,13 +107,13 @@ export default function Lobby({ game, players, isHost, currentPlayer }: Props) {
               The Henhouse <span className="text-on-surface-variant font-normal text-sm ml-1">({players.length})</span>
             </h3>
           </div>
-          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_12px_32px_rgba(27,28,26,0.05)] border border-outline-variant/15 relative overflow-hidden">
+          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_16px_rgba(0,0,0,0.3)] border border-outline-variant/15 relative overflow-hidden">
             <span className="material-symbols-outlined absolute -top-2.5 -left-2.5 opacity-15 -rotate-[15deg] text-primary text-6xl pointer-events-none">eco</span>
             <ul className="space-y-4 relative z-10">
               {players.map((p) => (
                 <li key={p.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className={`w-2 h-2 rounded-full ${p.connected ? 'bg-primary shadow-[0_0_8px_rgba(56,78,59,0.4)]' : 'bg-outline-variant'}`} />
+                    <span className={`w-2 h-2 rounded-full ${p.connected ? 'bg-primary shadow-[0_0_8px_rgba(168,201,169,0.5)]' : 'bg-outline-variant'}`} />
                     <span className="font-medium">
                       {p.name}
                       {(p.id === game.hostId || p.id === currentPlayer?.id) && (
@@ -179,7 +179,7 @@ export default function Lobby({ game, players, isHost, currentPlayer }: Props) {
             <button
               onClick={handleStart}
               disabled={starting || players.length < 3}
-              className="w-full bg-primary text-on-primary h-16 rounded-xl font-headline font-bold text-lg shadow-[0_12px_32px_rgba(56,78,59,0.25)] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 transition-transform duration-200"
+              className="w-full bg-primary text-on-primary h-16 rounded-xl font-headline font-bold text-lg shadow-[0_12px_32px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 transition-transform duration-200"
             >
               <span>{buttonLabel}</span>
               {players.length >= 3 && !starting && (

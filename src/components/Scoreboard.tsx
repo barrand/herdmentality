@@ -87,7 +87,7 @@ export default function Scoreboard({ game, players, isHost: _isHost, isFinal }: 
           <div className="space-y-3">
             <button
               onClick={() => navigate('/')}
-              className="w-full bg-primary text-on-primary h-14 rounded-xl font-body font-semibold tracking-wide shadow-[0_12px_32px_rgba(56,78,59,0.15)] hover:opacity-90 active:scale-95 transition-all"
+              className="w-full bg-primary text-on-primary h-14 rounded-xl font-body font-semibold tracking-wide shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:opacity-90 active:scale-95 transition-all"
             >
               PLAY AGAIN
             </button>
