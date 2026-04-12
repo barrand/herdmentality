@@ -65,20 +65,22 @@ export default function Lobby({ game, players, isHost, currentPlayer }: Props) {
     : 'Start Game'
 
   return (
-    <div className="min-h-screen bg-surface linen-texture font-body text-on-surface">
-      {/* Top App Bar */}
-      <header className="flex justify-between items-center w-full px-6 py-4 max-w-md mx-auto">
-        <h1 className="font-headline text-2xl font-semibold text-primary tracking-tight italic">Flock Together</h1>
-        <button
-          onClick={() => navigator.clipboard.writeText(game.code)}
-          className="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full border border-outline-variant/20"
-        >
-          <span className="material-symbols-outlined text-sm text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>content_paste</span>
-          <span className="font-headline text-sm font-bold text-secondary tracking-widest uppercase">ROOM: {game.code}</span>
-        </button>
-      </header>
+    <div className="min-h-screen bg-surface linen-texture font-body text-on-surface relative overflow-hidden">
+      {/* Background botanical decorations */}
+      <div className="absolute -top-8 -left-8 opacity-[0.07] pointer-events-none -rotate-12">
+        <img src="/images/botanical-fern.png" alt="" className="w-52 h-52 object-contain" />
+      </div>
+      <div className="absolute top-1/3 -right-12 opacity-[0.06] pointer-events-none rotate-[25deg]">
+        <img src="/images/botanical-wheat.png" alt="" className="w-56 h-56 object-contain" />
+      </div>
+      <div className="absolute bottom-24 -left-16 opacity-[0.05] pointer-events-none rotate-[200deg]">
+        <img src="/images/botanical-wheat.png" alt="" className="w-48 h-48 object-contain" />
+      </div>
+      <div className="absolute -bottom-6 -right-6 opacity-[0.07] pointer-events-none rotate-[140deg]">
+        <img src="/images/botanical-fern.png" alt="" className="w-44 h-44 object-contain" />
+      </div>
 
-      <main className="max-w-md mx-auto px-6 pt-4 pb-32">
+      <main className="max-w-md mx-auto px-6 pt-4 pb-32 relative z-10">
         {/* Header + Room Code */}
         <div className="text-center mb-8">
           <h2 className="font-headline text-4xl font-bold text-on-surface mb-2 tracking-tight">FLOCK TOGETHER</h2>

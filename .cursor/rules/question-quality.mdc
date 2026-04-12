@@ -1,0 +1,122 @@
+---
+description: Quality guide for Flock Together game questions. Auto-loaded when editing questions.json, gemini.ts, or scripts in scripts/.
+globs:
+  - functions/src/data/questions.json
+  - functions/src/gemini.ts
+  - scripts/**
+---
+
+# Flock Together Question Quality Guide
+
+## The Two Axes
+
+Every question must score on BOTH:
+
+**Convergence** -- Can a majority form?
+- Too easy = boring ("Name a yellow fruit")
+- Too hard = no flock ("What would you title your autobiography?")
+- Sweet spot = strong default that still creates debate
+
+**Entertainment** -- Does it create a moment people retell?
+- Laugh factor: does the premise itself make people smile?
+- Reveal drama: will the outlier answers spark debate?
+- Retellability: would someone describe this round to a friend?
+
+## Tone: Adult Game Night
+
+Target: adults after two drinks, not Thanksgiving with grandma.
+- Mildly transgressive -- "oh no" before laughing
+- Gross-funny, not gross-mean -- bodily humor, awkward scenarios, never punching down
+- Dark-curious -- flirting with taboo, never crossing into genuinely offensive
+
+Hard limits (NEVER cross):
+- No targeting of specific races, religions, genders, or disabilities
+- No sexual content beyond innuendo
+- No actual violence or cruelty
+- Nothing that could genuinely upset someone in the group
+
+## 9 Question Archetypes
+
+### 1. Absurd Scenario Pick
+Give 3-4 funny options for an absurd premise. The options ARE the joke.
+- "In a zombie apocalypse, who leads your group: The Rock, Martha Stewart, or your dentist?"
+- "Which kitchen appliance wins in a fight: microwave, blender, or toaster?"
+- "Your Uber driver starts singing opera. Do you: join in, tip extra, or tuck and roll?"
+- "You can only eat one condiment for the rest of your life. Ketchup, ranch, or hot sauce?"
+- "Which animal would be the worst coworker: a goose, a raccoon, or a parrot?"
+
+### 2. Spicy "Who in This Room"
+Limited answer space by definition. Push beyond generic.
+- "Who in this group would accidentally start a cult?"
+- "Who would get banned from a cruise ship first?"
+- "Who is secretly a terrible driver but won't admit it?"
+- "Who would survive the longest on a desert island?"
+- "Who would be the first to crack under interrogation?"
+
+### 3. Would You Rather (Absurd Edition)
+Binary = always convergent. Make the dilemma genuinely hard and funny.
+- "Would you rather have a permanent clown nose or permanent clown shoes?"
+- "Would you rather only be able to whisper or only be able to shout?"
+- "Would you rather fight one horse-sized duck or a hundred duck-sized horses?"
+- "Would you rather always smell slightly like garlic or always be slightly damp?"
+- "Would you rather have fingers for toes or toes for fingers?"
+
+### 4. Mildly Unhinged
+The "oh NO" questions. Slightly gross, slightly dark, always funny.
+- "What is the worst thing you could do to disrespect a gravestone?"
+- "What food would be the most disturbing to see someone eating in a bathtub?"
+- "If you HAD to lick one surface in this room, which would it be?"
+- "What is the worst possible thing to yell during a moment of silence?"
+- "What would be the most unsettling thing to find under your hotel mattress?"
+- "What is the grossest thing most people have done but won't admit?"
+
+### 5. The Obvious Answer You're Afraid to Say
+Strong default, but saying it feels too safe. Creates tension.
+- "What is the most overrated movie of all time?"
+- "What fast food place would you be embarrassed to admit you love?"
+- "What is the first thing everyone googles when they get a new phone?"
+- "What hobby sounds cool but is actually boring?"
+- "What is the most useless school subject?"
+
+### 6. Hot Take Binary
+Simple X-or-Y where BOTH sides have passionate defenders.
+- "Boneless wings or bone-in -- this is a dealbreaker."
+- "Is a hot dog a sandwich? Your answer reveals your character."
+- "Toilet seat: lid down always, or are you a monster?"
+- "Socks with sandals: crime against humanity or underrated comfort?"
+- "Showering in the morning or at night -- pick a side."
+
+### 7. Cultural Consensus with Teeth
+Shared knowledge with an opinionated edge.
+- "Name the movie everyone SAYS is their favorite but nobody actually rewatches"
+- "What is the most overplayed wedding song that needs to be retired?"
+- "Name a food that one person always ruins at Thanksgiving"
+- "What TV show went on at least two seasons too long?"
+- "What is the most annoying song that gets stuck in your head?"
+
+### 8. Vivid Scenario Response
+Paint a specific scene, ask a CONSTRAINED question about it. Always ask about a specific noun.
+- "Your in-laws are coming in 10 minutes and your house is a disaster. What do you hide first?"
+- "You walk into a room and everyone stops talking. What do you assume they were saying about you?"
+- "A bird poops on you right before a job interview. What body part would be the worst for it to land on?"
+- "You're trapped in an elevator for 3 hours. What one snack do you want?"
+- "You accidentally send a text to your boss meant for your best friend. What is the worst word it could start with?"
+CRITICAL: Always ask about a specific THING (object, person, food, body part). NEVER ask "what do you do?" or "what is your move?"
+
+### 9. Constrained Superlatives
+Best/worst format with enough constraint to converge.
+- "What is the single worst thing to step on in the dark?"
+- "What is the most suspicious thing to buy in bulk?"
+- "What expired food would you still eat without hesitation?"
+- "What is the most embarrassing thing to be caught doing by your neighbor?"
+- "What is the worst noise to hear coming from your basement at 3am?"
+
+## Anti-Patterns (NEVER write these)
+
+- **Survey questions**: "What is the most important thing in a friendship?" (earnest, flat, no comedy)
+- **Creative prompts**: "What would you name a puppy?" (infinite answer space, unique)
+- **Personal memory**: "What is the cringiest thing you did as a teenager?" (no overlap)
+- **Vague open-ended**: "If you could do anything for a day, what?" (too broad)
+- **"What's your move?"**: "A bird poops on you. What do you do?" (infinite action space, no consensus)
+- **Boringly obvious**: "Name a yellow fruit" (convergent but dead on arrival)
+- **Dependent**: "And the worst?" (requires context from previous question)

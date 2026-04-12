@@ -7,6 +7,7 @@ export interface GameData {
   id: string
   code: string
   hostId: string
+  originalHostId: string
   status: 'lobby' | 'playing' | 'finished'
   currentRound: number
   rottenEggHolder: string | null
@@ -31,6 +32,7 @@ export interface RoundData {
   status: 'answering' | 'revealing' | 'scored' | 'skipped'
   deadline: { seconds: number; nanoseconds: number }
   answerCount: number
+  answeredPlayerIds?: string[]
   answerGroups: string[]
   flockAnswer: string[]
   results: Record<string, RoundResult>

@@ -58,6 +58,7 @@ export const createGame = onCall(async (request) => {
   await gameRef.set({
     code,
     hostId: uid,
+    originalHostId: uid,
     status: 'lobby',
     currentRound: 0,
     rottenEggHolder: null,
@@ -143,7 +144,7 @@ export const startGame = onCall(async (request) => {
     }
   }
 
-  const question = await drawQuestion(gameId)
+  const question = await drawQuestion(gameId, [])
   if (!question) throw new HttpsError('internal', 'No questions available')
 
   const deadline = new Date(Date.now() + game.settings.secondsPerRound * 1000)
@@ -151,9 +152,11 @@ export const startGame = onCall(async (request) => {
   await gameRef.collection('rounds').doc('1').set({
     question: question.text,
     source: question.source,
+    tag: question.tag ?? null,
     status: 'answering',
     deadline: Timestamp.fromDate(deadline),
     answerCount: 0,
+    answeredPlayerIds: [],
     answerGroups: [],
     flockAnswer: [],
     results: {},
@@ -196,7 +199,7 @@ export const submitAnswer = onCall(async (request) => {
     const rSnap = await tx.get(roundRef)
     const current = rSnap.data()!.answerCount || 0
     const updated = current + 1
-    tx.update(roundRef, { answerCount: updated })
+    tx.update(roundRef, { answerCount: updated, answeredPlayerIds: FieldValue.arrayUnion(uid) })
     return updated
   })
 
@@ -313,16 +316,21 @@ export const onPresenceChange = onValueWritten(
         .doc(playerId)
         .set({ connected: data.connected }, { merge: true })
 
-      if (!data.connected) {
-        const gameSnap = await db.collection('games').doc(gameId).get()
-        if (gameSnap.exists && gameSnap.data()!.hostId === playerId) {
-          const playerIds: string[] = gameSnap.data()!.playerIds
-          const playersSnap = await db.collection('games').doc(gameId).collection('players').get()
-          const connectedPlayers = playersSnap.docs.filter((d) => d.data().connected && d.id !== playerId)
-          if (connectedPlayers.length > 0) {
-            await db.collection('games').doc(gameId).update({ hostId: connectedPlayers[0].id })
-          }
+      const gameSnap = await db.collection('games').doc(gameId).get()
+      if (!gameSnap.exists) return
+
+      const gameData = gameSnap.data()!
+
+      if (!data.connected && gameData.hostId === playerId) {
+        const playersSnap = await db.collection('games').doc(gameId).collection('players').get()
+        const connectedPlayers = playersSnap.docs.filter((d) => d.data().connected && d.id !== playerId)
+        if (connectedPlayers.length > 0) {
+          await db.collection('games').doc(gameId).update({ hostId: connectedPlayers[0].id })
         }
+      }
+
+      if (data.connected && gameData.originalHostId === playerId && gameData.hostId !== playerId) {
+        await db.collection('games').doc(gameId).update({ hostId: playerId })
       }
     } catch (err) {
       console.error('Presence sync failed:', err)
@@ -340,26 +348,29 @@ async function triggerScoring(gameId: string, roundNum: number) {
   await roundRef.update({ status: 'revealing' })
 
   const answersSnap = await roundRef.collection('answers').get()
-  const answers: Record<string, string> = {}
+  const rawAnswers: Record<string, string> = {}
+  const normalizedAnswers: Record<string, string> = {}
   answersSnap.docs.forEach((d) => {
-    answers[d.id] = d.data().text
+    rawAnswers[d.id] = d.data().text
+    normalizedAnswers[d.id] = normalizeAnswer(d.data().text)
   })
 
   const question = roundSnap.data()!.question
   const gameSnap = await db.collection('games').doc(gameId).get()
   const game = gameSnap.data()!
 
-  const answerValues = Object.values(answers)
+  const normalizedValues = Object.values(normalizedAnswers)
+  const uniqueNormalized = [...new Set(normalizedValues)]
   let groups: string[][]
   let commentary = ''
 
-  const quickGroups = fallbackGrouping(answerValues)
+  const quickGroups = fallbackGrouping(uniqueNormalized)
   if (quickGroups.length <= 1) {
     groups = quickGroups
     console.log('All answers match after normalization, skipping Gemini')
   } else {
     try {
-      const geminiResult: GeminiGroupResult = await groupAnswersWithGemini(question, answerValues)
+      const geminiResult: GeminiGroupResult = await groupAnswersWithGemini(question, uniqueNormalized)
       groups = geminiResult.groups
       commentary = geminiResult.commentary
       console.log('Gemini grouping result:', JSON.stringify(groups))
@@ -372,7 +383,7 @@ async function triggerScoring(gameId: string, roundNum: number) {
   }
 
   const { results, rottenEggHolder } = scoreRoundAnswers(
-    answers,
+    normalizedAnswers,
     groups,
     game.rottenEggHolder,
     game.playerIds,
@@ -385,7 +396,7 @@ async function triggerScoring(gameId: string, roundNum: number) {
     answerGroups: groups.map((g) => JSON.stringify(g)),
     flockAnswer: hasFlock ? (groups[0] ?? []) : [],
     results,
-    playerAnswers: answers,
+    playerAnswers: rawAnswers,
     commentary,
   })
 
@@ -423,7 +434,15 @@ async function doAdvanceRound(gameId: string) {
     return
   }
 
-  const question = await drawQuestion(gameId)
+  // Collect recent tags for variety-aware drawing
+  const recentTags: string[] = []
+  for (let r = Math.max(1, game.currentRound - 4); r <= game.currentRound; r++) {
+    const roundDoc = await gameRef.collection('rounds').doc(String(r)).get()
+    const tag = roundDoc.data()?.tag
+    if (tag) recentTags.push(tag)
+  }
+
+  const question = await drawQuestion(gameId, recentTags)
   if (!question) {
     await gameRef.update({ status: 'finished' })
     return
@@ -434,9 +453,11 @@ async function doAdvanceRound(gameId: string) {
   await gameRef.collection('rounds').doc(String(nextRound)).set({
     question: question.text,
     source: question.source,
+    tag: question.tag ?? null,
     status: 'answering',
     deadline: Timestamp.fromDate(deadline),
     answerCount: 0,
+    answeredPlayerIds: [],
     answerGroups: [],
     flockAnswer: [],
     results: {},
@@ -445,13 +466,24 @@ async function doAdvanceRound(gameId: string) {
   await gameRef.update({ currentRound: nextRound })
 }
 
+function normalizeAnswer(text: string): string {
+  let s = text.trim().toLowerCase()
+  s = s.replace(/[\u2018\u2019\u201C\u201D]/g, "'")
+  s = s.replace(/[.,!?;:\-"'()]/g, '')
+  s = s.replace(/\s+/g, ' ')
+  s = s.replace(/^(a |an |the )/, '')
+  s = s.replace(/\band\b/g, '&').replace(/\bn\b/g, '&').replace(/&/g, 'and')
+  s = s.trim()
+  return s
+}
+
 function fallbackGrouping(answers: string[]): string[][] {
-  const normalized = new Map<string, string[]>()
+  const groups = new Map<string, string[]>()
   for (const answer of answers) {
-    const key = answer.toLowerCase().trim().replace(/^(a |an |the )/, '').replace(/s$/, '')
-    const group = normalized.get(key) ?? []
+    const key = normalizeAnswer(answer)
+    const group = groups.get(key) ?? []
     group.push(answer)
-    normalized.set(key, group)
+    groups.set(key, group)
   }
-  return Array.from(normalized.values()).sort((a, b) => b.length - a.length)
+  return Array.from(groups.values()).sort((a, b) => b.length - a.length)
 }

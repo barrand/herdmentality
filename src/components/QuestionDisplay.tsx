@@ -15,7 +15,10 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
   const [submitting, setSubmitting] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
   const [expired, setExpired] = useState(false)
+  const [confirmEndRound, setConfirmEndRound] = useState(false)
   const endRoundTriggered = useRef(false)
+
+  const answeredIds = new Set(round.answeredPlayerIds ?? [])
 
   useEffect(() => {
     if (!round.deadline) return
@@ -60,6 +63,18 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
       await skipQuestion(game.id)
     } catch (err) {
       console.error('Failed to skip:', err)
+    }
+  }
+
+  const handleEndRound = async () => {
+    if (!confirmEndRound) {
+      setConfirmEndRound(true)
+      return
+    }
+    try {
+      await forceEndRound(game.id)
+    } catch (err) {
+      console.error('Failed to end round:', err)
     }
   }
 
@@ -131,10 +146,37 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
         )}
       </div>
 
-      <div className="mt-auto pt-6 text-center">
-        <p className="text-sm text-outline font-body">
-          {round.answerCount} of {players.length} players answered
+      {/* Player answer status list */}
+      <div className="mt-6 bg-surface-container-lowest rounded-xl border border-outline-variant/20 p-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-secondary mb-3 font-label">
+          {answeredIds.size} of {players.length} answered
         </p>
+        <ul className="space-y-2">
+          {players.map((p) => {
+            const hasAnswered = answeredIds.has(p.id)
+            return (
+              <li key={p.id} className="flex items-center justify-between">
+                <span className={`text-sm font-body ${hasAnswered ? 'text-on-surface' : 'text-outline'}`}>
+                  {p.name}
+                </span>
+                {hasAnswered ? (
+                  <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                ) : (
+                  <span className="text-xs text-outline italic font-body">waiting...</span>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+
+        {isHost && !expired && answeredIds.size > 0 && (
+          <button
+            onClick={handleEndRound}
+            className="mt-4 w-full border-2 border-secondary text-secondary h-12 rounded-xl font-body font-semibold tracking-wide hover:bg-secondary-fixed/20 active:scale-95 transition-all"
+          >
+            {confirmEndRound ? 'Are you sure? Tap again to end round' : 'End Round'}
+          </button>
+        )}
       </div>
     </div>
   )

@@ -18,26 +18,32 @@ export async function groupAnswersWithGemini(question: string, answers: string[]
 
   const model = getModel()
 
-  const prompt = `You are scoring a party game called Flock Together. Players answered: "${question}"
+  const prompt = `You are scoring a casual party game called Flock Together. Players answered: "${question}"
 
 Answers: ${JSON.stringify(answers)}
 
 Do TWO things:
 
-1. GROUP answers that are the SAME SPECIFIC ANSWER, just written differently. Only group together if they clearly mean the exact same thing:
+1. GROUP answers that mean the SAME THING, even if written differently. This is a casual phone game -- players type fast and sloppy. Be generous with matching:
+
+ALWAYS group these together:
 - Typos/misspellings: "bagette" = "baguette", "chickn" = "chicken"
-- Plurals: "dog" = "dogs"
+- Plurals: "dog" = "dogs", "cookie" = "cookies"
 - Articles: "a cat" = "cat" = "the cat"
-- Abbreviations: "MJ" = "Michael Jordan" (only if unambiguous in context)
+- Abbreviations: "MJ" = "Michael Jordan", "NYC" = "New York" = "new york city"
 - Capitalization: "paris" = "Paris"
+- Spacing: "ice cream" = "icecream" = "ice-cream"
+- Shorthand: "mac and cheese" = "mac & cheese" = "mac n cheese"
+- Informal versions: "gonna" = "going to", "fave" = "favorite"
+- Close enough for a party game: "chocolate chip" = "chocolate chip cookies"
 
-NEVER group different things that are merely in the same category. For example:
-- "Lisa" and "Manon" are DIFFERENT (both K-pop stars, but different people)
-- "Pizza" and "Pasta" are DIFFERENT (both Italian food, but different foods)
-- "BMW" and "Mercedes" are DIFFERENT (both German cars, but different brands)
-- "Lion" and "Tiger" are DIFFERENT (both big cats, but different animals)
+NEVER group things that are genuinely DIFFERENT answers:
+- "Lisa" and "Manon" are DIFFERENT (different people)
+- "Pizza" and "Pasta" are DIFFERENT (different foods)
+- "BMW" and "Mercedes" are DIFFERENT (different brands)
+- "Lion" and "Tiger" are DIFFERENT (different animals)
 
-When in doubt, keep answers in SEPARATE groups. The game rewards giving the SAME answer, not similar ones.
+When in doubt for this casual party game, lean toward GROUPING rather than splitting. Players get frustrated when obvious matches are missed.
 Sort groups largest to smallest. Each answer in exactly one group.
 
 2. Write ONE short, funny COMMENTARY sentence (max 15 words) to spark debate among the players. Roast an outlier, note a surprising consensus, or be playfully sarcastic.
@@ -71,9 +77,32 @@ export async function generateQuestionsFromCategories(categories: string[]): Pro
 
   const model = getModel()
 
-  const prompt = `Generate 25 fun Flock Together party game questions themed around these categories: ${categories.join(', ')}
+  const prompt = `You are writing questions for "Flock Together" -- an adult party game where players try to write the SAME answer as the majority. Generate 25 questions themed around these categories: ${categories.join(', ')}
 
-Questions should ask for opinions, favorites, or associations where many people are likely to give the same answer. Mix categories throughout. Vary question styles (favorites, "name one...", "what would you...", etc.)
+IMPORTANT: Use each category as FLAVOR, not the whole question.
+- BAD: "Name a Disney villain." (flat survey question)
+- GOOD: "Which Disney villain would actually be a great roommate?"
+- BAD: "What is a popular Marvel movie?"
+- GOOD: "Which Avenger would get fired from a real job first?"
+
+TONE: Adult game night. Mildly edgy, slightly gross, two-drinks-in humor. Make players laugh, squirm, or debate.
+
+Generate across these styles (mix them up):
+- 5 Absurd Scenario Pick: give 3-4 funny options in the question itself
+- 4 Spicy superlatives: "What is the most/worst/best [constrained noun]..."
+- 4 Would You Rather: binary, genuinely hard dilemma
+- 4 Mildly Unhinged: slightly gross or dark, always funny
+- 4 Obvious Answer: strong default that feels too basic to say
+- 4 Constrained Scenario: paint a vivid scene, ask about a specific THING (not "what do you do?")
+
+RULES:
+- Every question MUST relate to one of the provided categories
+- NEVER ask "what would you do?" or "what is your move?" -- always ask about a specific noun (object, person, food, place)
+- NEVER write boring survey questions ("What is the best thing about X?")
+- NEVER write personal memory questions ("What is your favorite X memory?")
+- Every question should have a finite answer space where a majority can form
+- Every question must pass the retellability test: would someone describe this round to a friend?
+- HARD LIMITS: No racism, sexism, homophobia, ableism. No explicit sexual content.
 
 Return ONLY valid JSON: { "questions": [{ "text": "...", "category": "..." }, ...] }`
 

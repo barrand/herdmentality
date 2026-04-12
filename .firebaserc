@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "flock-together-game"
-  }
+  },
+  "targets": {
+    "flock-together-game": {
+      "hosting": {
+        "live": [
+          "flockgame"
+        ],
+        "default": [
+          "flock-together-game"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

@@ -1,0 +1,17 @@
+{
+  "name": "flock-together-scripts",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "grade": "npx tsx grade-questions.ts",
+    "generate": "npx tsx generate-questions.ts",
+    "assemble": "npx tsx assemble-bank.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3"
+  }
+}
