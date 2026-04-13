@@ -217,13 +217,40 @@ export const skipQuestion = onCall(async (request) => {
   const { gameId } = request.data as { gameId: string }
   const gameRef = db.collection('games').doc(gameId)
   const gameSnap = await gameRef.get()
+  const game = gameSnap.data()!
 
-  if (gameSnap.data()!.hostId !== uid) throw new HttpsError('permission-denied', 'Only host can skip')
+  if (game.hostId !== uid) throw new HttpsError('permission-denied', 'Only host can skip')
 
-  const roundNum = gameSnap.data()!.currentRound
-  await gameRef.collection('rounds').doc(String(roundNum)).update({ status: 'skipped' })
+  const roundNum = game.currentRound
+  const roundRef = gameRef.collection('rounds').doc(String(roundNum))
 
-  await doAdvanceRound(gameId)
+  const recentTags: string[] = []
+  for (let r = Math.max(1, roundNum - 4); r <= roundNum; r++) {
+    const roundDoc = await gameRef.collection('rounds').doc(String(r)).get()
+    const tag = roundDoc.data()?.tag
+    if (tag) recentTags.push(tag)
+  }
+
+  const newQuestion = await drawQuestion(gameId, recentTags)
+  if (!newQuestion) throw new HttpsError('internal', 'No more questions available')
+
+  const deadline = new Date(Date.now() + game.settings.secondsPerRound * 1000)
+
+  const answersSnap = await roundRef.collection('answers').get()
+  const batch = db.batch()
+  answersSnap.docs.forEach((doc) => batch.delete(doc.ref))
+  await batch.commit()
+
+  await roundRef.update({
+    question: newQuestion.text,
+    source: newQuestion.source,
+    tag: newQuestion.tag ?? null,
+    submittedBy: newQuestion.submittedBy ?? null,
+    status: 'answering',
+    deadline: Timestamp.fromDate(deadline),
+    answerCount: 0,
+    answeredPlayerIds: [],
+  })
 })
 
 // -- UPDATE CATEGORIES (host-only) --
