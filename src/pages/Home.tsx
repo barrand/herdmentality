@@ -76,7 +76,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 mb-8">
           <label className="block font-label text-xs font-bold uppercase tracking-widest text-secondary ml-1" htmlFor="player-name">
             Your Name
           </label>
@@ -91,37 +91,38 @@ export default function Home() {
           />
         </div>
 
-        <button
-          onClick={handleCreate}
-          disabled={creating}
-          className="w-full bg-primary text-on-primary h-14 rounded-xl font-body font-semibold tracking-wide shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:opacity-90 active:scale-95 disabled:opacity-50 transition-all"
-        >
-          {creating ? 'Creating...' : 'CREATE GAME'}
-        </button>
-
-        <div className="flex items-center gap-4 py-2">
-          <div className="h-px flex-1 bg-outline-variant/40" />
-          <span className="font-headline italic text-secondary text-sm">or</span>
-          <div className="h-px flex-1 bg-outline-variant/40" />
-        </div>
-
         <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Room code (e.g. MANGO)"
-            value={roomCode}
-            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-            className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-xl px-4 py-4 text-on-surface placeholder:text-outline/50 font-body text-center uppercase tracking-widest font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-            maxLength={10}
-          />
-
           <button
-            onClick={handleJoin}
-            disabled={joining}
-            className="w-full bg-surface-container-lowest border-2 border-primary text-primary h-14 rounded-xl font-body font-semibold tracking-wide hover:bg-primary-fixed/20 active:scale-95 disabled:opacity-50 transition-all"
+            onClick={handleCreate}
+            disabled={creating}
+            className="w-full bg-primary text-on-primary h-14 rounded-xl font-body font-semibold tracking-wide shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:opacity-90 active:scale-95 disabled:opacity-50 transition-all"
           >
-            {joining ? 'Joining...' : 'JOIN GAME'}
+            {creating ? 'Creating...' : 'CREATE GAME'}
           </button>
+
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-outline-variant/40" />
+            <span className="font-headline italic text-secondary text-sm">or</span>
+            <div className="h-px flex-1 bg-outline-variant/40" />
+          </div>
+
+          <div className="flex gap-3">
+            <input
+              type="text"
+              placeholder="ROOM CODE"
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              className="flex-1 bg-surface-container-lowest border-2 border-outline-variant/30 rounded-xl px-4 py-4 text-on-surface placeholder:text-outline/50 font-body text-center uppercase tracking-widest font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              maxLength={10}
+            />
+            <button
+              onClick={handleJoin}
+              disabled={joining}
+              className="bg-surface-container-lowest border-2 border-primary text-primary h-14 px-6 rounded-xl font-body font-semibold tracking-wide hover:bg-primary-fixed/20 active:scale-95 disabled:opacity-50 transition-all"
+            >
+              {joining ? '...' : 'JOIN'}
+            </button>
+          </div>
         </div>
 
         {error && (
