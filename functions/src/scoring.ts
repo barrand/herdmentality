@@ -1,10 +1,16 @@
 type RoundResult = 'flock' | 'outlier' | 'rotten' | 'no-answer'
 
-interface ScoringResult {
+export interface ScoringResult {
   results: Record<string, RoundResult>
   rottenEggHolder: string | null
+  flockGroupIndex: number
 }
 
+/**
+ * Groups contain unique normalized answer strings (from Gemini or fallback).
+ * `answers` maps playerId -> normalized answer.
+ * We count PLAYERS per group to determine the flock, not unique string count.
+ */
 export function scoreRoundAnswers(
   answers: Record<string, string>,
   groups: string[][],
@@ -19,53 +25,51 @@ export function scoreRoundAnswers(
     }
   }
 
-  const sortedGroups = [...groups].sort((a, b) => b.length - a.length)
-
-  if (sortedGroups.length === 0) {
-    return { results, rottenEggHolder: currentRottenEggHolder }
+  if (groups.length === 0) {
+    return { results, rottenEggHolder: currentRottenEggHolder, flockGroupIndex: -1 }
   }
 
-  const answerToPlayer = new Map<string, string>()
-  for (const [playerId, answer] of Object.entries(answers)) {
-    answerToPlayer.set(answer, playerId)
-  }
+  const groupSets = groups.map((g) => new Set(g))
 
-  const largestSize = sortedGroups[0].length
-  const tiedForLargest = sortedGroups.filter((g) => g.length === largestSize)
+  const playerCountPerGroup = groupSets.map((groupSet) =>
+    Object.values(answers).filter((a) => groupSet.has(a)).length,
+  )
 
-  if (tiedForLargest.length > 1) {
+  const maxPlayerCount = Math.max(...playerCountPerGroup)
+  const indicesWithMax = playerCountPerGroup
+    .map((count, i) => ({ count, i }))
+    .filter(({ count }) => count === maxPlayerCount)
+
+  if (indicesWithMax.length > 1 || maxPlayerCount < 2) {
     for (const playerId of Object.keys(answers)) {
       if (!(playerId in results)) {
         results[playerId] = 'outlier'
       }
     }
-    return { results, rottenEggHolder: currentRottenEggHolder }
+    return { results, rottenEggHolder: currentRottenEggHolder, flockGroupIndex: -1 }
   }
 
-  const flockGroup = sortedGroups[0]
-  const flockSet = new Set(flockGroup)
+  const flockIdx = indicesWithMax[0].i
+  const flockSet = groupSets[flockIdx]
 
   for (const [playerId, answer] of Object.entries(answers)) {
     if (playerId in results) continue
-
-    if (flockSet.has(answer)) {
-      results[playerId] = 'flock'
-    } else {
-      results[playerId] = 'outlier'
-    }
+    results[playerId] = flockSet.has(answer) ? 'flock' : 'outlier'
   }
 
   let newRottenEggHolder = currentRottenEggHolder
-  const soloGroups = sortedGroups.filter((g) => g.length === 1)
+  const soloIndices = playerCountPerGroup
+    .map((count, i) => ({ count, i }))
+    .filter(({ count }) => count === 1)
 
-  if (soloGroups.length === 1) {
-    const soloAnswer = soloGroups[0][0]
-    const soloPlayerId = answerToPlayer.get(soloAnswer)
+  if (soloIndices.length === 1) {
+    const soloSet = groupSets[soloIndices[0].i]
+    const soloPlayerId = Object.entries(answers).find(([, a]) => soloSet.has(a))?.[0]
     if (soloPlayerId) {
       results[soloPlayerId] = 'rotten'
       newRottenEggHolder = soloPlayerId
     }
   }
 
-  return { results, rottenEggHolder: newRottenEggHolder }
+  return { results, rottenEggHolder: newRottenEggHolder, flockGroupIndex: flockIdx }
 }

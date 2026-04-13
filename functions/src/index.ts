@@ -2,7 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { onValueWritten } from 'firebase-functions/v2/database'
 import * as admin from 'firebase-admin'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
-import { scoreRoundAnswers } from './scoring'
+import { scoreRoundAnswers, ScoringResult } from './scoring'
 import { groupAnswersWithGemini, generateQuestionsFromCategories, GeminiGroupResult } from './gemini'
 import { drawQuestion, seedQuestionPool } from './questions'
 
@@ -342,10 +342,14 @@ export const onPresenceChange = onValueWritten(
 
 async function triggerScoring(gameId: string, roundNum: number) {
   const roundRef = db.collection('games').doc(gameId).collection('rounds').doc(String(roundNum))
-  const roundSnap = await roundRef.get()
-  if (roundSnap.data()!.status !== 'answering') return
 
-  await roundRef.update({ status: 'revealing' })
+  const claimed = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(roundRef)
+    if (snap.data()?.status !== 'answering') return false
+    tx.update(roundRef, { status: 'revealing' })
+    return true
+  })
+  if (!claimed) return
 
   const answersSnap = await roundRef.collection('answers').get()
   const rawAnswers: Record<string, string> = {}
@@ -355,7 +359,8 @@ async function triggerScoring(gameId: string, roundNum: number) {
     normalizedAnswers[d.id] = normalizeAnswer(d.data().text)
   })
 
-  const question = roundSnap.data()!.question
+  const roundSnap = await roundRef.get()
+  const questionText = roundSnap.data()!.question
   const gameSnap = await db.collection('games').doc(gameId).get()
   const game = gameSnap.data()!
 
@@ -363,47 +368,78 @@ async function triggerScoring(gameId: string, roundNum: number) {
   const uniqueNormalized = [...new Set(normalizedValues)]
   let groups: string[][]
   let commentary = ''
+  let groupSource = 'fallback'
 
   const quickGroups = fallbackGrouping(uniqueNormalized)
   if (quickGroups.length <= 1) {
     groups = quickGroups
-    console.log('All answers match after normalization, skipping Gemini')
+    groupSource = 'normalization-match'
   } else {
     try {
-      const geminiResult: GeminiGroupResult = await groupAnswersWithGemini(question, uniqueNormalized)
-      groups = geminiResult.groups
+      const geminiResult: GeminiGroupResult = await groupAnswersWithGemini(questionText, uniqueNormalized)
+      groups = validateGeminiGroups(geminiResult.groups, uniqueNormalized)
       commentary = geminiResult.commentary
-      console.log('Gemini grouping result:', JSON.stringify(groups))
-      console.log('Gemini commentary:', commentary)
+      groupSource = 'gemini'
     } catch (err) {
       console.error('Gemini failed, using fallback:', err)
       groups = quickGroups
-      console.log('Fallback grouping result:', JSON.stringify(groups))
     }
   }
 
-  const { results, rottenEggHolder } = scoreRoundAnswers(
+  const scoring: ScoringResult = scoreRoundAnswers(
     normalizedAnswers,
     groups,
     game.rottenEggHolder,
     game.playerIds,
   )
 
-  const hasFlock = Object.values(results).some((r) => r === 'flock')
+  const hasFlock = Object.values(scoring.results).some((r) => r === 'flock')
+
+  let flockDisplayAnswer: string[] = []
+  if (hasFlock && scoring.flockGroupIndex >= 0) {
+    const flockSet = new Set(groups[scoring.flockGroupIndex])
+    const rawFlockEntry = Object.entries(rawAnswers).find(
+      ([pid]) => flockSet.has(normalizedAnswers[pid]),
+    )
+    if (rawFlockEntry) {
+      flockDisplayAnswer = [rawFlockEntry[1]]
+    }
+  }
+
+  const playerCountPerGroup = groups.map((g) => {
+    const s = new Set(g)
+    return Object.values(normalizedAnswers).filter((a) => s.has(a)).length
+  })
+
+  console.log(JSON.stringify({
+    event: 'scoring',
+    gameId,
+    roundNum,
+    groupSource,
+    rawAnswers,
+    normalizedAnswers,
+    uniqueNormalized,
+    groups,
+    playerCountPerGroup,
+    results: scoring.results,
+    hasFlock,
+    flockDisplayAnswer,
+    commentary,
+  }))
 
   await roundRef.update({
     status: 'scored',
     answerGroups: groups.map((g) => JSON.stringify(g)),
-    flockAnswer: hasFlock ? (groups[0] ?? []) : [],
-    results,
+    flockAnswer: flockDisplayAnswer,
+    results: scoring.results,
     playerAnswers: rawAnswers,
     commentary,
   })
 
   const batch = db.batch()
-  const gameUpdates: Record<string, any> = { rottenEggHolder: rottenEggHolder }
+  const gameUpdates: Record<string, any> = { rottenEggHolder: scoring.rottenEggHolder }
 
-  for (const [playerId, result] of Object.entries(results)) {
+  for (const [playerId, result] of Object.entries(scoring.results)) {
     if (result === 'flock') {
       const playerRef = db.collection('games').doc(gameId).collection('players').doc(playerId)
       batch.update(playerRef, { eggs: FieldValue.increment(1) })
@@ -480,10 +516,45 @@ function normalizeAnswer(text: string): string {
 function fallbackGrouping(answers: string[]): string[][] {
   const groups = new Map<string, string[]>()
   for (const answer of answers) {
-    const key = normalizeAnswer(answer)
-    const group = groups.get(key) ?? []
+    const group = groups.get(answer) ?? []
     group.push(answer)
-    groups.set(key, group)
+    groups.set(answer, group)
   }
   return Array.from(groups.values()).sort((a, b) => b.length - a.length)
+}
+
+function validateGeminiGroups(geminiGroups: string[][], expected: string[]): string[][] {
+  const expectedSet = new Set(expected)
+  const allPresent = geminiGroups.flat().every((s) => expectedSet.has(s))
+  const allAccountedFor = expected.every((s) =>
+    geminiGroups.some((g) => g.includes(s)),
+  )
+
+  if (allPresent && allAccountedFor) return geminiGroups
+
+  const lowerToOriginal = new Map(expected.map((s) => [s.toLowerCase(), s]))
+  const remapped: string[][] = []
+
+  for (const group of geminiGroups) {
+    const fixed: string[] = []
+    for (const s of group) {
+      if (expectedSet.has(s)) {
+        fixed.push(s)
+      } else {
+        const match = lowerToOriginal.get(s.toLowerCase())
+        if (match) fixed.push(match)
+      }
+    }
+    if (fixed.length > 0) remapped.push(fixed)
+  }
+
+  const remappedFlat = new Set(remapped.flat())
+  for (const s of expected) {
+    if (!remappedFlat.has(s)) {
+      remapped.push([s])
+    }
+  }
+
+  console.warn('Gemini groups remapped:', JSON.stringify({ original: geminiGroups, remapped }))
+  return remapped
 }
