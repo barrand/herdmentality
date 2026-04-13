@@ -29,6 +29,7 @@ export interface RoundData {
   id: string
   question: string
   source: 'preset' | 'custom' | 'ai-generated'
+  submittedBy?: string | null
   status: 'answering' | 'revealing' | 'scored' | 'skipped'
   deadline: { seconds: number; nanoseconds: number }
   answerCount: number

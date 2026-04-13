@@ -100,6 +100,11 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
         <p className="font-headline text-xl font-bold text-on-surface leading-relaxed">
           {round.question}
         </p>
+        {round.source === 'custom' && round.submittedBy && (
+          <p className="mt-2 text-xs text-outline font-body">
+            submitted by {players.find((p) => p.id === round.submittedBy)?.name ?? 'a player'}
+          </p>
+        )}
       </div>
 
       {isHost && !expired && (

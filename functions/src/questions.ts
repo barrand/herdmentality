@@ -41,7 +41,7 @@ const TAG_COOLDOWNS: Record<string, number> = {
 export async function drawQuestion(
   gameId: string,
   recentTags: string[] = [],
-): Promise<{ text: string; source: string; tag: string | null } | null> {
+): Promise<{ text: string; source: string; tag: string | null; submittedBy: string | null } | null> {
   const db = getDb()
   const poolRef = db.collection('games').doc(gameId).collection('questionPool')
 
@@ -69,7 +69,7 @@ function isTagOnCooldown(tag: string | null, recentTags: string[]): boolean {
 async function weightedDraw(
   poolRef: FirebaseFirestore.CollectionReference,
   recentTags: string[],
-): Promise<{ text: string; source: string; tag: string | null } | null> {
+): Promise<{ text: string; source: string; tag: string | null; submittedBy: string | null } | null> {
   const sources = Object.keys(SOURCE_WEIGHTS)
   const buckets: Record<string, FirebaseFirestore.QueryDocumentSnapshot[]> = {}
 
@@ -114,5 +114,6 @@ async function weightedDraw(
     text: chosen.data().text,
     source: chosen.data().source,
     tag: chosen.data().tag ?? null,
+    submittedBy: chosen.data().submittedBy ?? null,
   }
 }
