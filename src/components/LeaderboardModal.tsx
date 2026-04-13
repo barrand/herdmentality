@@ -34,14 +34,14 @@ export default function LeaderboardModal({ game, players, currentPlayerId, onClo
                   player.id === currentPlayerId ? 'bg-secondary-fixed/30 border border-secondary-fixed-dim' : ''
                 }`}
               >
-                <span className="font-medium text-on-surface">
+                <span className="flex items-center gap-1.5 font-medium text-on-surface">
                   {i + 1}. {player.name}
+                  {game.rottenEggHolder === player.id && <RottenEgg size={18} />}
                   {player.id === currentPlayerId && ' ←'}
                 </span>
                 <div className="flex items-center gap-2">
                   <span>{'🥚'.repeat(Math.min(player.eggs, 8))}</span>
                   {player.eggs > 8 && <span className="text-sm text-on-surface-variant">x{player.eggs}</span>}
-                  {game.rottenEggHolder === player.id && <RottenEgg size={22} />}
                 </div>
               </li>
             ))}

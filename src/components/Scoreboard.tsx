@@ -62,13 +62,13 @@ export default function Scoreboard({ game, players, isHost: _isHost, isFinal }: 
         <ul className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 divide-y divide-outline-variant/20">
           {sorted.map((player, i) => (
             <li key={player.id} className="px-4 py-3 flex items-center justify-between">
-              <span className="font-medium text-on-surface font-body">
+              <span className="flex items-center gap-1.5 font-medium text-on-surface font-body">
                 {i + 1}. {player.name}
+                {game.rottenEggHolder === player.id && <RottenEgg size={18} />}
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-lg">{'🥚'.repeat(Math.min(player.eggs, 10))}</span>
                 {player.eggs > 10 && <span className="text-sm text-on-surface-variant font-body">x{player.eggs}</span>}
-                {game.rottenEggHolder === player.id && <RottenEgg size={24} />}
               </div>
             </li>
           ))}
