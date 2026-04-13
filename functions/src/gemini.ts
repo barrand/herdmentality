@@ -77,32 +77,40 @@ export async function generateQuestionsFromCategories(categories: string[]): Pro
 
   const model = getModel()
 
-  const prompt = `You are writing questions for "Flock Together" -- an adult party game where players try to write the SAME answer as the majority. Generate 25 questions themed around these categories: ${categories.join(', ')}
+  const prompt = `You are writing questions for "Flock Together" -- a mobile party game where players type the SAME answer as the majority on their phones. Generate 10 short questions themed around: ${categories.join(', ')}
 
-IMPORTANT: Use each category as FLAVOR, not the whole question.
-- BAD: "Name a Disney villain." (flat survey question)
-- GOOD: "Which Disney villain would actually be a great roommate?"
-- BAD: "What is a popular Marvel movie?"
-- GOOD: "Which Avenger would get fired from a real job first?"
+LENGTH IS CRITICAL. Every question MUST be under 80 characters. Aim for 40-60. Players read these on a phone screen and answer in seconds. Short = fun. Long = skipped.
 
-TONE: Adult game night. Mildly edgy, slightly gross, two-drinks-in humor. Make players laugh, squirm, or debate.
+GOOD examples for category "Brazil":
+- "Samba or bossa nova?" (20ch)
+- "Best Brazilian food: feijoada, coxinha, or açaí?" (49ch)
+- "Would you rather live in Rio or São Paulo?" (43ch)
+- "What animal do you associate with Brazil?" (41ch)
+- "Name a famous Brazilian" (24ch)
+- "Carnival or Copa do Mundo?" (26ch)
 
-Generate across these styles (mix them up):
-- 5 Absurd Scenario Pick: give 3-4 funny options in the question itself
-- 4 Spicy superlatives: "What is the most/worst/best [constrained noun]..."
-- 4 Would You Rather: binary, genuinely hard dilemma
-- 4 Mildly Unhinged: slightly gross or dark, always funny
-- 4 Obvious Answer: strong default that feels too basic to say
-- 4 Constrained Scenario: paint a vivid scene, ask about a specific THING (not "what do you do?")
+BAD examples (NEVER write questions like these):
+- "You're at a bustling Brazilian churrascaria and a server approaches your table with a giant skewer..." (NO -- way too long, nobody reads this)
+- "While exploring a hidden cave in the Amazon, you disturb a rare ancient spirit..." (NO -- scenario setup kills the pace)
+
+Use these SHORT question formats (mix them up):
+- A or B? -- binary choice: "Cats or dogs?"
+- A, B, or C? -- pick one of three: "Pirates, aliens, or ghosts?"
+- Best/worst X? -- short superlative: "Most overrated holiday?"
+- Would you rather -- SHORT dilemma, no backstory: "Would you rather fight one horse-sized duck or 100 duck-sized horses?"
+- Name a... -- open-ended with obvious default: "Name a famous Italian"
+
+TONE: Family-friendly game night. Punchy, funny, lighthearted. All ages welcome -- no alcohol, drugs, clubbing, partying, or adult-only references.
 
 RULES:
-- Every question MUST relate to one of the provided categories
-- NEVER ask "what would you do?" or "what is your move?" -- always ask about a specific noun (object, person, food, place)
+- UNDER 80 CHARACTERS. This is the most important rule.
+- Do NOT write a setup, backstory, or scenario. Get straight to the question.
+- Every question must relate to one of the provided categories
+- Every question should have a small answer space where a majority can naturally form
+- NEVER ask "what would you do?" -- ask about a specific thing (object, person, food, place)
 - NEVER write boring survey questions ("What is the best thing about X?")
-- NEVER write personal memory questions ("What is your favorite X memory?")
-- Every question should have a finite answer space where a majority can form
-- Every question must pass the retellability test: would someone describe this round to a friend?
-- HARD LIMITS: No racism, sexism, homophobia, ableism. No explicit sexual content.
+- FAMILY FRIENDLY. No alcohol, drugs, clubbing, bars, or adult-only content.
+- No racism, sexism, homophobia, ableism. No sexual content.
 
 Return ONLY valid JSON: { "questions": [{ "text": "...", "category": "..." }, ...] }`
 
@@ -115,5 +123,11 @@ Return ONLY valid JSON: { "questions": [{ "text": "...", "category": "..." }, ..
 
   const text = result.response.text()
   const parsed = JSON.parse(text)
-  return parsed.questions
+
+  const MAX_LENGTH = 100
+  const questions: GeneratedQuestion[] = (parsed.questions ?? []).filter(
+    (q: GeneratedQuestion) => q.text && q.text.length <= MAX_LENGTH,
+  )
+
+  return questions
 }
