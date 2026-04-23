@@ -89,9 +89,6 @@ export default function Home() {
             className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline/50 font-body focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
             maxLength={20}
           />
-          <p className="text-on-surface-variant text-xs font-body leading-snug pl-1">
-            Same name for both paths — you&apos;ll show up in the lobby with this name.
-          </p>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 md:gap-0">

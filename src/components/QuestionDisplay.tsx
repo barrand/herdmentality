@@ -61,6 +61,7 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
     setSubmitting(true)
     try {
       await submitAnswer(game.id, game.currentRound, answer.trim())
+      setAnswer('')
       setSubmitted(true)
     } catch (err) {
       console.error('Failed to submit answer:', err)
@@ -96,6 +97,7 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
   return (
     <div className="flex-1 flex flex-col px-4 py-6">
       <div className="text-center mb-4">
+        <p className="text-xs font-label uppercase tracking-widest text-secondary mb-1">Round timer</p>
         <p className={`font-headline text-3xl font-bold tabular-nums ${expired ? 'text-error' : 'text-on-surface'}`}>
           {expired ? "TIME'S UP!" : `0:${String(timeLeft).padStart(2, '0')}`}
         </p>
@@ -154,10 +156,17 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
             </button>
           </>
         ) : (
-          <div className="text-center py-4">
-            <p className="text-on-surface-variant font-medium font-body">You answered:</p>
-            <p className="font-headline text-2xl font-bold text-on-surface mt-1">"{answer}"</p>
-            <p className="text-outline mt-2 font-body">Clucked in</p>
+          <div className="text-center py-4 rounded-xl border border-outline-variant/20 bg-surface-container-low/50 px-4">
+            <p className="font-headline text-lg font-semibold text-on-surface">You&apos;re clucked in</p>
+            <p className="text-on-surface-variant text-sm font-body mt-2">
+              Waiting for the rest of the flock. Your answer only appears at the reveal.
+            </p>
+            <p
+              className={`mt-3 font-headline text-2xl font-bold tabular-nums ${expired ? 'text-error' : 'text-primary'}`}
+              aria-live="polite"
+            >
+              {expired ? "TIME'S UP" : `0:${String(timeLeft).padStart(2, '0')} left`}
+            </p>
           </div>
         )}
       </div>
