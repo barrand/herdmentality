@@ -55,7 +55,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-8 py-12 bg-surface linen-texture relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center px-8 py-12 bg-surface linen-texture font-body text-on-surface relative overflow-hidden">
       {/* Decorative botanical backgrounds */}
       <div className="absolute -top-10 -left-10 opacity-10 pointer-events-none -rotate-12">
         <img src="/images/botanical-fern.png" alt="" className="w-48 h-48 object-contain" />
@@ -64,9 +64,9 @@ export default function Home() {
         <img src="/images/botanical-wheat.png" alt="" className="w-64 h-64 object-contain" />
       </div>
 
-      <div className="w-full max-w-sm space-y-6 relative">
-        <div className="text-center mb-12">
-          <h1 className="font-headline text-5xl font-bold tracking-tighter text-on-surface leading-none mb-6">
+      <div className="w-full max-w-2xl space-y-6 relative px-0">
+        <div className="text-center mb-10">
+          <h1 className="font-headline text-5xl font-bold tracking-tight text-on-surface leading-none mb-6">
             FLOCK<br />TOGETHER
           </h1>
           {/* Seed-packet style rooster badge */}
@@ -76,9 +76,9 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="space-y-2 mb-8">
-          <label className="block font-label text-xs font-bold uppercase tracking-widest text-secondary ml-1" htmlFor="player-name">
-            Your Name
+        <div className="space-y-2 rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/40 p-4 sm:p-5">
+          <label className="block font-label text-[10px] font-bold uppercase tracking-[0.2em] text-secondary ml-1" htmlFor="player-name">
+            Your name
           </label>
           <input
             id="player-name"
@@ -86,43 +86,81 @@ export default function Home() {
             placeholder="Enter name..."
             value={name}
             onChange={(e) => saveName(e.target.value)}
-            className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-xl px-4 py-4 text-on-surface placeholder:text-outline/50 font-body focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline/50 font-body focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
             maxLength={20}
           />
+          <p className="text-on-surface-variant text-xs font-body leading-snug pl-1">
+            Same name for both paths — you&apos;ll show up in the lobby with this name.
+          </p>
         </div>
 
-        <div className="space-y-4">
-          <button
-            onClick={handleCreate}
-            disabled={creating}
-            className="w-full bg-primary text-on-primary h-14 rounded-xl font-body font-semibold tracking-wide shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:opacity-90 active:scale-95 disabled:opacity-50 transition-all"
+        <div className="flex flex-col md:flex-row md:items-stretch gap-4 md:gap-0">
+          <section
+            aria-labelledby="join-heading"
+            className="flex flex-1 flex-col md:min-h-[260px] rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/40 p-4 sm:p-5 shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
           >
-            {creating ? 'Creating...' : 'CREATE GAME'}
-          </button>
-
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1 bg-outline-variant/40" />
-            <span className="font-headline italic text-secondary text-sm">or</span>
-            <div className="h-px flex-1 bg-outline-variant/40" />
-          </div>
-
-          <div className="flex gap-3">
+            <h2 id="join-heading" className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-secondary ml-1">
+              Join a game
+            </h2>
+            <p className="text-on-surface-variant text-xs font-body leading-snug mt-2 mb-4 pl-1">
+              Have a room code from the host? Enter it here.
+            </p>
+            <label htmlFor="room-code" className="sr-only">
+              Room code
+            </label>
             <input
+              id="room-code"
               type="text"
-              placeholder="ROOM CODE"
+              placeholder="Room code, e.g. MANGO"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-              className="flex-1 bg-surface-container-lowest border-2 border-outline-variant/30 rounded-xl px-4 py-4 text-on-surface placeholder:text-outline/50 font-body text-center uppercase tracking-widest font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              className="w-full bg-surface-container-lowest border-2 border-outline-variant/30 rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline/50 font-body focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all mb-4"
               maxLength={10}
             />
             <button
+              type="button"
               onClick={handleJoin}
               disabled={joining}
-              className="bg-surface-container-lowest border-2 border-primary text-primary h-14 px-6 rounded-xl font-body font-semibold tracking-wide hover:bg-primary-fixed/20 active:scale-95 disabled:opacity-50 transition-all"
+              className="mt-auto w-full bg-primary text-on-primary h-14 rounded-xl font-headline font-bold text-lg tracking-wide shadow-[0_12px_32px_rgba(0,0,0,0.35)] hover:opacity-90 active:scale-[0.98] disabled:opacity-50 transition-all"
             >
-              {joining ? '...' : 'JOIN'}
+              {joining ? 'Joining…' : 'JOIN GAME'}
             </button>
+          </section>
+
+          <div className="flex md:hidden items-center gap-4 py-1 shrink-0">
+            <div className="h-px flex-1 bg-outline-variant/40" />
+            <span className="font-body text-xs italic text-on-surface-variant">or</span>
+            <div className="h-px flex-1 bg-outline-variant/40" />
           </div>
+
+          <div
+            className="hidden md:flex flex-col items-center justify-center px-3 shrink-0 w-12 self-stretch"
+            aria-hidden="true"
+          >
+            <div className="flex-1 w-px min-h-[1.5rem] bg-outline-variant/40" />
+            <span className="font-body text-xs italic text-on-surface-variant py-2">or</span>
+            <div className="flex-1 w-px min-h-[1.5rem] bg-outline-variant/40" />
+          </div>
+
+          <section
+            aria-labelledby="create-heading"
+            className="flex flex-1 flex-col md:min-h-[260px] rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/40 p-4 sm:p-5 shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+          >
+            <h2 id="create-heading" className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-secondary ml-1">
+              Create a game
+            </h2>
+            <p className="text-on-surface-variant text-xs font-body leading-snug mt-2 mb-4 flex-1 pl-1">
+              Start a new room. You&apos;ll be the host and get a code to share.
+            </p>
+            <button
+              type="button"
+              onClick={handleCreate}
+              disabled={creating}
+              className="mt-auto w-full bg-surface-container-lowest border-2 border-primary text-primary h-14 rounded-xl font-headline font-bold text-lg tracking-wide hover:bg-primary-fixed/15 active:scale-[0.98] disabled:opacity-50 transition-all"
+            >
+              {creating ? 'Creating…' : 'CREATE GAME'}
+            </button>
+          </section>
         </div>
 
         {error && (

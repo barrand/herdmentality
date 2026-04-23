@@ -29,6 +29,8 @@ export interface RoundData {
   id: string
   question: string
   source: 'preset' | 'custom' | 'ai-generated'
+  /** Firestore questionPool doc id for the current question (used to return skipped questions to the pool). */
+  questionPoolId?: string | null
   submittedBy?: string | null
   status: 'answering' | 'revealing' | 'scored' | 'skipped'
   deadline: { seconds: number; nanoseconds: number }
@@ -37,7 +39,7 @@ export interface RoundData {
   answerGroups: string[]
   flockAnswer: string[]
   results: Record<string, RoundResult>
-  playerAnswers: Record<string, string>
+  playerAnswers?: Record<string, string>
   commentary?: string
 }
 

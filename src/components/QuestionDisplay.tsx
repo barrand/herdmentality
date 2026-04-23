@@ -20,15 +20,26 @@ export default function QuestionDisplay({ game, round, isHost, players }: Props)
 
   const answeredIds = new Set(round.answeredPlayerIds ?? [])
 
+  // New question (same round # after skip, or next round): reset local UI so players can answer again.
+  useEffect(() => {
+    setSubmitted(false)
+    setAnswer('')
+    setConfirmEndRound(false)
+    setExpired(false)
+    endRoundTriggered.current = false
+  }, [round.id, round.question, round.deadline.seconds, round.deadline.nanoseconds])
+
   useEffect(() => {
     if (!round.deadline) return
 
-    const deadlineMs = round.deadline.seconds * 1000
+    const deadlineMs = round.deadline.seconds * 1000 + (round.deadline.nanoseconds ?? 0) / 1e6
     const tick = () => {
       const remaining = Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000))
       setTimeLeft(remaining)
       if (remaining <= 0) {
         setExpired(true)
+      } else {
+        setExpired(false)
       }
     }
     tick()

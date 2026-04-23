@@ -154,6 +154,7 @@ export const startGame = onCall(async (request) => {
     source: question.source,
     tag: question.tag ?? null,
     submittedBy: question.submittedBy ?? null,
+    questionPoolId: question.poolDocId,
     status: 'answering',
     deadline: Timestamp.fromDate(deadline),
     answerCount: 0,
@@ -223,6 +224,11 @@ export const skipQuestion = onCall(async (request) => {
 
   const roundNum = game.currentRound
   const roundRef = gameRef.collection('rounds').doc(String(roundNum))
+  const roundSnap = await roundRef.get()
+  if (!roundSnap.exists) throw new HttpsError('not-found', 'Round not found')
+  if (roundSnap.data()!.status !== 'answering') {
+    throw new HttpsError('failed-precondition', 'Can only skip during the answering phase')
+  }
 
   const recentTags: string[] = []
   for (let r = Math.max(1, roundNum - 4); r <= roundNum; r++) {
@@ -231,25 +237,43 @@ export const skipQuestion = onCall(async (request) => {
     if (tag) recentTags.push(tag)
   }
 
+  const prevPoolId = roundSnap.data()?.questionPoolId as string | undefined
+
+  const answersSnap = await roundRef.collection('answers').get()
+  const delBatch = db.batch()
+  answersSnap.docs.forEach((doc) => delBatch.delete(doc.ref))
+  await delBatch.commit()
+
+  // Put the skipped question back in the pool so skips do not burn through the bank
+  // (otherwise each skip consumes an extra "used" slot and the game can end before totalRounds).
+  if (prevPoolId) {
+    try {
+      await gameRef.collection('questionPool').doc(prevPoolId).update({ used: false })
+    } catch (err) {
+      console.warn('skipQuestion: could not release question to pool', prevPoolId, err)
+    }
+  }
+
   const newQuestion = await drawQuestion(gameId, recentTags)
   if (!newQuestion) throw new HttpsError('internal', 'No more questions available')
 
   const deadline = new Date(Date.now() + game.settings.secondsPerRound * 1000)
-
-  const answersSnap = await roundRef.collection('answers').get()
-  const batch = db.batch()
-  answersSnap.docs.forEach((doc) => batch.delete(doc.ref))
-  await batch.commit()
 
   await roundRef.update({
     question: newQuestion.text,
     source: newQuestion.source,
     tag: newQuestion.tag ?? null,
     submittedBy: newQuestion.submittedBy ?? null,
+    questionPoolId: newQuestion.poolDocId,
     status: 'answering',
     deadline: Timestamp.fromDate(deadline),
     answerCount: 0,
     answeredPlayerIds: [],
+    answerGroups: [],
+    flockAnswer: [],
+    results: {},
+    playerAnswers: {},
+    commentary: FieldValue.delete(),
   })
 })
 
@@ -519,6 +543,7 @@ async function doAdvanceRound(gameId: string) {
     source: question.source,
     tag: question.tag ?? null,
     submittedBy: question.submittedBy ?? null,
+    questionPoolId: question.poolDocId,
     status: 'answering',
     deadline: Timestamp.fromDate(deadline),
     answerCount: 0,
